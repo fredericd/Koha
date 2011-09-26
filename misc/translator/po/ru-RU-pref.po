@@ -1,18 +1,11 @@
-# translation of ru-RU-pref.po to Russian
-# Russian translation Koha-OPAC.
-#
-# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
-# This file is distributed under the same license as the PACKAGE package.
-#
-# Serhij Dubyk <serhijdubyk@gmail.com>, 2010-2011.
 msgid ""
 msgstr ""
-"Project-Id-Version: ru-RU-pref\n"
+"Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2011-06-29 23:51+0200\n"
-"PO-Revision-Date: 2011-08-09 01:55+0200\n"
+"POT-Creation-Date: 2011-09-23 10:06+0200\n"
+"PO-Revision-Date: 2011-09-26 13:28+0200\n"
 "Last-Translator: Serhij <dubyk@ukr.net>\n"
-"Language-Team: Ukrainian Linux Team <translation@linux.org.ua>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
 "Language: ru\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -20,7 +13,6 @@ msgstr ""
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%"
 "10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
 "X-Generator: Pootle 2.1.6\n"
-"X-Poedit-SourceCharset: utf-8\n"
 
 # Acquisitions
 msgid "acquisitions.pref"
@@ -49,6 +41,18 @@ msgstr "размещении заказа."
 # Acquisitions > Policy
 msgid "acquisitions.pref#AcqCreateItem# receiving an order."
 msgstr "получении заказа."
+
+# Acquisitions > Policy
+msgid "acquisitions.pref#BasketConfirmations# When closing or reopening a basket,"
+msgstr "При закрытии или открытии заново полочки заказов, "
+
+# Acquisitions > Policy
+msgid "acquisitions.pref#BasketConfirmations# always ask for confirmation."
+msgstr " всегда запрашивать подтверждение. "
+
+# Acquisitions > Policy
+msgid "acquisitions.pref#BasketConfirmations# do not ask for confirmation."
+msgstr " не спрашивать подтверждения."
 
 # Acquisitions > Policy
 msgid "acquisitions.pref#CurrencyFormat# 360 000,00 (FR)"
@@ -255,8 +259,8 @@ msgid "admin.pref#timeout# Automatically log out users after"
 msgstr "Автоматический выход пользователей после"
 
 # Administration > Login options
-msgid "admin.pref#timeout# seconds of inactivity."
-msgstr "секунд бездействия."
+msgid "admin.pref#timeout# milliseconds of inactivity."
+msgstr ""
 
 # Administration > Interface options
 msgid "admin.pref#virtualshelves# Allow"
@@ -287,8 +291,8 @@ msgid "authorities.pref#BiblioAddsAuthorities# don't allow"
 msgstr "запретить"
 
 # Authorities
-msgid "authorities.pref#BiblioAddsAuthorities# them too automatically create new authority records if needed, rather than having to reference existing authorities."
-msgstr " также автоматически создавать новые авторитетные записи, если это необходимо, вместо того, чтобы ссылаться на существующие авторитетные источники."
+msgid "authorities.pref#BiblioAddsAuthorities# them to automatically create new authority records if needed, rather than having to reference existing authorities."
+msgstr ""
 
 # Authorities
 msgid "authorities.pref#UseAuthoritiesForTracings# Don't use"
@@ -472,49 +476,47 @@ msgstr "Использовать"
 
 # Cataloging > Display
 msgid "cataloguing.pref#UseControlNumber# record control number ($w subfields) and control number (001) for linking of bibliographic records."
-msgstr ""
-"контрольный номер записи (подполя $w) и контрольный номер (001) для связи "
-"библиографических записей."
+msgstr "контрольный номер записи (подполя $w) и контрольный номер (001) для связи библиографических записей."
 
 # Cataloging > Interface
 msgid "cataloguing.pref#advancedMARCeditor# Display"
-msgstr ""
+msgstr "Показывать"
 
 # Cataloging > Interface
 msgid "cataloguing.pref#advancedMARCeditor# Don't display"
-msgstr ""
+msgstr "Не показывать"
 
 # Cataloging > Interface
 msgid "cataloguing.pref#advancedMARCeditor# descriptions of fields and subfields in the MARC editor."
-msgstr ""
+msgstr " описания полей и подполей в МАРК-редакторе."
 
 # Cataloging > Display
 msgid "cataloguing.pref#authoritysep# ."
-msgstr ""
+msgstr "."
 
 # Cataloging > Display
 msgid "cataloguing.pref#authoritysep# Separate multiple displayed authors, series or subjects with "
-msgstr ""
+msgstr "Отделять несколько авторов, серий или тематик с помощью "
 
 # Cataloging > Record Structure
 msgid "cataloguing.pref#autoBarcode# Barcodes are"
-msgstr ""
+msgstr "Штрих-коды "
 
 # Cataloging > Record Structure
 msgid "cataloguing.pref#autoBarcode# generated in the form &lt;branchcode&gt;yymm0001."
-msgstr ""
+msgstr " формируются по схеме &lt;кодподразделения&gt;ггмм0001."
 
 # Cataloging > Record Structure
 msgid "cataloguing.pref#autoBarcode# generated in the form &lt;year&gt;-0001, &lt;year&gt;-0002."
-msgstr ""
+msgstr " формируются по схеме &lt;год&gt;-0001, &lt;год&gt;-0002."
 
 # Cataloging > Record Structure
 msgid "cataloguing.pref#autoBarcode# generated in the form 1, 2, 3."
-msgstr ""
+msgstr " формируются последовательно — 1, 2, 3, …."
 
 # Cataloging > Record Structure
 msgid "cataloguing.pref#autoBarcode# not generated automatically."
-msgstr ""
+msgstr " не создаются автоматически. "
 
 # Cataloging > Display
 msgid "cataloguing.pref#hide_marc# Display"
@@ -2217,7 +2219,7 @@ msgid "opac.pref#OPACFineNoRenewals# Only allow patrons to renew their own books
 msgstr ""
 
 # OPAC > Policy
-msgid "opac.pref#OPACFineNoRenewals# [% local_currency %] in fines (leave blank to disable)."
+msgid "opac.pref#OPACFineNoRenewals# [% local_currency %] in fines (set a large value to always allow renewal)."
 msgstr ""
 
 # OPAC > Features
@@ -2334,31 +2336,31 @@ msgstr ""
 
 # OPAC > Policy
 msgid "opac.pref#OPACViewOthersSuggestions# Don't show"
-msgstr ""
+msgstr "opac.pref#OPACViewOthersSuggestions# Не показывать"
 
 # OPAC > Policy
 msgid "opac.pref#OPACViewOthersSuggestions# Show"
-msgstr ""
+msgstr "opac.pref#OPACViewOthersSuggestions# Показывать"
 
 # OPAC > Policy
 msgid "opac.pref#OPACViewOthersSuggestions# purchase suggestions from other patrons on the OPAC."
-msgstr ""
+msgstr "opac.pref#OPACViewOthersSuggestions# предложения по приобретению от других пользователей в электронном каталоге "
 
 # OPAC > Appearance
 msgid "opac.pref#OPACXSLTDetailsDisplay# Show item details pages on the OPAC"
-msgstr ""
+msgstr "opac.pref#OPACXSLTDetailsDisplay# Показывать страницы со сведениями об экземплярах в электронном каталоге"
 
 # OPAC > Appearance
 msgid "opac.pref#OPACXSLTDetailsDisplay# normally."
-msgstr ""
+msgstr "opac.pref#OPACXSLTDetailsDisplay# в нормальном виде."
 
 # OPAC > Appearance
 msgid "opac.pref#OPACXSLTDetailsDisplay# using XSLT stylesheets."
-msgstr ""
+msgstr "opac.pref#OPACXSLTDetailsDisplay# использую XSLT стили."
 
 # OPAC > Appearance
 msgid "opac.pref#OPACXSLTResultsDisplay# Show biblio records on OPAC result page"
-msgstr ""
+msgstr "opac.pref#OPACXSLTResultsDisplay# Показывать библиографические записи на странице результата поиска электронного каталога "
 
 # OPAC > Appearance
 msgid "opac.pref#OPACXSLTResultsDisplay# normally."
@@ -2758,11 +2760,13 @@ msgstr ""
 
 # Patrons
 msgid "patrons.pref#BorrowerMandatoryField# (separate columns with |)"
-msgstr ""
+msgstr " (отделять столбцы с помощью знака «|»)"
 
 # Patrons
 msgid "patrons.pref#BorrowerMandatoryField# The following database columns must be filled in on the patron entry screen:"
 msgstr ""
+"Следующие столбцы базы данных должны быть заполнены при регистрации "
+"посетителя: "
 
 # Patrons
 msgid "patrons.pref#BorrowersTitles# (separate multiple choices with |)"
