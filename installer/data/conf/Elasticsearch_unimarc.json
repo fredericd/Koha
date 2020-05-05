@@ -1,0 +1,248 @@
+{
+  "indexes" : {
+    "biblios" : {
+      "author" : {
+        "source" : [
+          {
+            "map" : ["200f","200g","700a"],
+            "index" : ["search","facet","suggestible"]
+          },
+          {
+            "map" : "701"
+          }
+        ]
+      },
+      "bio" : { "source" : { "map" : "105a_/12" } },
+      "ccode" : {
+        "source" : {
+          "index" : ["search","facet"],
+          "map" : "9958"
+        }
+      },
+      "ctype" : { "source" : { "map" : "105a_/4-7" } },
+      "date-entered-on-file" : { "source" : { "map" : "099c" } },
+      "date-of-acquisition" : {
+        "type" : "date",
+        "source" : {
+          "map" : "9955",
+          "index" : ["search","sort"]
+        }
+      },
+      "date-of-publication" : {
+        "source" : {
+          "index" : ["search","sort"],
+          "map" : "100a_/9-12"
+        }
+      },
+      "date-time-last-modified" : { "source" : { "map" : "099d" } },
+      "ff8-29" : { "source" : { "map" : "105a_/8" } },
+      "holdingbranch" : { "source" : { "map" : "995c" } },
+      "homebranch" : {
+        "source" : {
+          "index" : ["search","facet"],
+          "map" : "995b"
+        }
+      },
+      "host-item-number" : {
+        "type" : "number",
+        "source" : { "map" : "4619" }
+      },
+      "local-number" : { "source" : { "map" : "001" } },
+      "identifier-standard" : {
+        "type" : "stdno",
+        "source" : { "map" : ["010a","010z","011a","011y","011z"] }
+      },
+      "isbn" : {
+        "type" : "isbn",
+        "source" : {
+          "plugin" : {
+            "ISBN" : {
+              "map" : "010az"
+            }
+          }
+        }
+      },
+      "issn" : {
+        "type" : "stdno",
+        "source" : {
+          "map" : ["011a","011y","011z"]
+        }
+      },
+      "itemnumber" : {
+        "type" : "number",
+        "source" : { "map" : "9959" }
+      },
+      "itype" : {
+        "source" : {
+          "index" : ["search","facet"],
+          "map" : ["200b","995r"]
+        }
+      },
+      "lc-card-number" : { "source" : { "map" : "995j" } },
+      "lf" : { "source" : { "map" : "105a_/11" } },
+      "local-classification" : {
+        "source" : [
+          {
+            "index" : ["search","suggestible"],
+            "map" : "995k"
+          },
+          {
+            "map" : "686"
+          }
+        ]
+      },
+      "location" : {
+        "source" : {
+          "index" : ["search","facet"],
+          "map" : "995e"
+        }
+      },
+      "ln" : {
+        "source" : {
+          "index" : ["search","facet"],
+          "map" : "101a"
+        }
+      },
+      "notforloan" : { "source" : { "map" : "995o" } },
+      "onloan" : {
+        "type" : "boolean",
+        "source" : { "map" : "995n" }
+      },
+      "publisher" : {
+        "source" : {
+          "index" : ["search","facet"],
+          "map" : "210c"
+        }
+      },
+      "su-geo" : {
+        "source" : {
+          "index" : ["search","facet"],
+          "map" : "607a"
+        }
+      },
+      "subject" : {
+        "source" : {
+          "index" : ["search","facet","suggestible"],
+          "map" : ["600","600a","601","602","604","605","606","607","608","610"]
+        }
+      },
+      "suppress" : {
+        "type" : "boolean",
+        "source" : { "map" : "955n" }
+      },
+      "ta" : { "source" : { "map" : "100a_/17" } },
+      "title" : {
+        "type" : "string",
+        "source" : [
+          {
+            "index" : ["search","suggestible"],
+            "map" : ["200acdehi","205","304a"]
+          },
+          {
+            "index" : ["search","sort","suggestible"],
+            "map" : "200a"
+          },
+          {
+            "map" : [
+              "327abcdefghi","328t",
+              "410t","411t","412t","413t",
+              "421t","422t","423t","424t","425t",
+              "430t","431t","432t","433t","434t","435t","436t","437t",
+              "440t","441t","442t","443t","444t","445t","446t","447t","448t",
+              "451t","452t","453t","454t","455t","456t",
+              "461t","462t","463t","464t",
+              "470t",
+              "481t","482t","488t"
+            ]
+          }
+        ]
+      },
+      "title-series" : {
+        "source" : {
+          "index" : ["search","facet"],
+          "map" : "225a"
+        }
+      }
+    },
+    "authorities" : {
+      "authtype" : { "source" : { "map" : "152b" } },
+      "Heading" : {
+        "source" : {
+          "map" : [
+            "200abcdfgjxyz",
+            "210abcdefghjxyz",
+            "215ajxyz",
+            "216afcjxyz",
+            "220afjxyz",
+            "230abhijklmnqrsuwxyz",
+            "235abejkmrsuwxyz",
+            "240atjxyz",
+            "250ajxyz",
+            "260abcdjxyz",
+            "280ajxyz"
+          ]
+        }
+      },
+      "Heading-Main" : {
+        "source" : {
+          "index" : ["search","sort"],
+          "map" : ["200a","210a","215a","216a","220a","230a","235a","240a","250a","260a","280a"]
+        }
+      },
+      "local-number" : { "source" : { "map" : "001" } },
+      "Match" : {
+        "source" : {
+          "map" : [
+            "2003478abcdfgjxyz",
+            "2103478abcdefghxyz",
+            "21578ajxyz",
+            "216378acfjxyz",
+            "220378afjxyz",
+            "2308abhijklmqrsuwxyz",
+            "235378abeijkmratsuwxyz",
+            "2408abcfjtxyz",
+            "245ajtxyz",
+            "2508abcdjvxyz",
+            "260378abcd",
+            "280378ajxyz",
+            "4000234568abcdfgjxyz",
+            "41002345678abcdefghjxyz",
+            "4150235678ajxyz",
+            "416acfjxyz",
+            "420afjxyz",
+            "4300235678abhijklmnqrsuwxyz",
+            "4350235678abejkmrsuwxyz",
+            "4400235678abcdfjtxyz",
+            "445ajtxyz",
+            "4500235678ajxyz",
+            "460abcd",
+            "480ajxyz",
+            "500023456789abcdfgjxyz",
+            "51002345678abcdefghjxyz",
+            "5150356789ajxyz",
+            "5169acfjxyz",
+            "5209afjxyz",
+            "53002356789abhijklmnqrsuwxyz",
+            "53502356789abjkmqrsuwxyz",
+            "5400235678ajtxyz",
+            "5459ajtxyz",
+            "55002356789abjxyz",
+            "56059abcd",
+            "58059ajxyz",
+            "70023478abcdfgjxyz",
+            "71023478abcdefghjxyz",
+            "7152378ajxyz",
+            "716acfjxyz",
+            "720afjxyz",
+            "7302378abhijklmnqrsuwxyz",
+            "7402378ajtxyz",
+            "745378ajtxyz",
+            "75023789abjxyz",
+            "760abcd",
+            "780ajxyz"
+          ]
+        }
+      }
+    }
+  }
+}

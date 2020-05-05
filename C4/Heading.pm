@@ -221,10 +221,10 @@ sub _search {
     # Use state variables to avoid recreating the objects every time.
     # With Elasticsearch this also avoids creating a massive amount of
     # ES connectors that would eventually run out of file descriptors.
-    state $builder = Koha::SearchEngine::QueryBuilder->new(
-        { index => $Koha::SearchEngine::AUTHORITIES_INDEX } );
     state $searcher = Koha::SearchEngine::Search->new(
         {index => $Koha::SearchEngine::AUTHORITIES_INDEX} );
+    state $builder = Koha::SearchEngine::QueryBuilder->new(
+        { index => $Koha::SearchEngine::AUTHORITIES_INDEX, es => $searcher } );
 
     my $search_query = $builder->build_authorities_query_compat(
         \@marclist, \@and_or, \@excluding, \@operator,

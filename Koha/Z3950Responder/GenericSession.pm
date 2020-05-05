@@ -54,8 +54,8 @@ sub start_search {
     }
 
     my $database = $args->{DATABASES}->[0];
-    my $builder = Koha::SearchEngine::QueryBuilder->new({ index => $database });
     my $searcher = Koha::SearchEngine::Search->new({ index => $database });
+    my $builder = Koha::SearchEngine::QueryBuilder->new({ index => $database, es => $searcher });
 
     my $built_query;
     my $query = $args->{RPN}->{'query'}->to_koha($self->{'attribute_mappings'}->{$database});

@@ -2,7 +2,7 @@ package Koha::SearchEngine::Elasticsearch::QueryBuilder;
 
 # This file is part of Koha.
 #
-# Copyright 2014 Catalyst IT Ltd.
+# Copyright 2020 Tamil s.a.r.l.
 #
 # Koha is free software; you can redistribute it and/or modify it
 # under the terms of the GNU General Public License as published by
@@ -39,9 +39,10 @@ provides something that can be given to elasticsearch to get answers.
 
 =cut
 
-use base qw(Koha::SearchEngine::Elasticsearch);
+use Moo;
 use Carp;
 use JSON;
+use YAML;
 use List::MoreUtils qw/ each_array /;
 use Modern::Perl;
 use URI::Escape;
@@ -49,110 +50,16 @@ use URI::Escape;
 use C4::Context;
 use Koha::Exceptions;
 use Koha::Caches;
+use Koha::SearchEngine::Elasticsearch;
 
-our %index_field_convert = (
-    'kw' => '',
-    'ab' => 'abstract',
-    'au' => 'author',
-    'lcn' => 'local-classification',
-    'callnum' => 'local-classification',
-    'record-type' => 'rtype',
-    'mc-rtype' => 'rtype',
-    'mus' => 'rtype',
-    'lc-card' => 'lc-card-number',
-    'sn' => 'local-number',
-    'biblionumber' => 'local-number',
-    'yr' => 'date-of-publication',
-    'pubdate' => 'date-of-publication',
-    'acqdate' => 'date-of-acquisition',
-    'date/time-last-modified' => 'date-time-last-modified',
-    'dtlm' => 'date-time-last-modified',
-    'diss' => 'dissertation-information',
-    'nb' => 'isbn',
-    'ns' => 'issn',
-    'music-number' => 'identifier-publisher-for-music',
-    'number-music-publisher' => 'identifier-publisher-for-music',
-    'music' => 'identifier-publisher-for-music',
-    'ident' => 'identifier-standard',
-    'cpn' => 'corporate-name',
-    'cfn' => 'conference-name',
-    'pn' => 'personal-name',
-    'pb' => 'publisher',
-    'pv' => 'provider',
-    'nt' => 'note',
-    'notes' => 'note',
-    'rcn' => 'record-control-number',
-    'su' => 'subject',
-    'su-to' => 'subject',
-    #'su-geo' => 'subject',
-    'su-ut' => 'subject',
-    'ti' => 'title',
-    'se' => 'title-series',
-    'ut' => 'title-uniform',
-    'an' => 'koha-auth-number',
-    'authority-number' => 'koha-auth-number',
-    'at' => 'authtype',
-    'he' => 'heading',
-    'rank' => 'relevance',
-    'phr' => 'st-phrase',
-    'wrdl' => 'st-word-list',
-    'rt' => 'right-truncation',
-    'rtrn' => 'right-truncation',
-    'ltrn' => 'left-truncation',
-    'rltrn' => 'left-and-right',
-    'mc-itemtype' => 'itemtype',
-    'mc-ccode' => 'ccode',
-    'branch' => 'homebranch',
-    'mc-loc' => 'location',
-    'loc' => 'location',
-    'stocknumber' => 'number-local-acquisition',
-    'inv' => 'number-local-acquisition',
-    'bc' => 'barcode',
-    'mc-itype' => 'itype',
-    'aub' => 'author-personal-bibliography',
-    'auo' => 'author-in-order',
-    'ff8-22' => 'ta',
-    'aud' => 'ta',
-    'audience' => 'ta',
-    'frequency-code' => 'ff8-18',
-    'illustration-code' => 'ff8-18-21',
-    'regularity-code' => 'ff8-19',
-    'type-of-serial' => 'ff8-21',
-    'format' => 'ff8-23',
-    'conference-code' => 'ff8-29',
-    'festschrift-indicator' => 'ff8-30',
-    'index-indicator' => 'ff8-31',
-    'fiction' => 'lf',
-    'fic' => 'lf',
-    'literature-code' => 'lf',
-    'biography' => 'bio',
-    'ff8-34' => 'bio',
-    'biography-code' => 'bio',
-    'l-format' => 'ff7-01-02',
-    'lex' => 'lexile-number',
-    'hi' => 'host-item-number',
-    'itu' => 'index-term-uncontrolled',
-    'itg' => 'index-term-genre',
-);
-my $field_name_pattern = '[\w\-]+';
-my $multi_field_pattern = "(?:\\.$field_name_pattern)*";
+has es => (is => 'rw');
 
-=head2 get_index_field_convert
+has index => (is => 'rw');
 
-    my @index_params = Koha::SearchEngine::Elasticsearch::QueryBuilder->get_index_field_convert();
 
-Converts zebra-style search index notation into elasticsearch-style.
+sub BUILD {
+    my ($self, $args) = @_;
 
-C<@indexes> is an array of index names, as presented to L<build_query_compat>,
-and it returns something that can be sent to L<build_query>.
-
-B<TODO>: this will pull from the elasticsearch mappings table to figure out
-types.
-
-=cut
-
-sub get_index_field_convert() {
-    return \%index_field_convert;
 }
 
 =head2 build_query
@@ -202,12 +109,12 @@ sub build_query {
             query            => $query,
             fuzziness        => $fuzzy_enabled ? 'auto' : '0',
             default_operator => 'AND',
-            fields           => $fields,
+            #fields           => $fields,
             lenient          => JSON::true,
             analyze_wildcard => JSON::true,
+            type             => 'cross_fields',
         }
     };
-    $res->{query}->{query_string}->{type} = 'cross_fields' if C4::Context->preference('ElasticsearchCrossFields');
 
     if ( $options{sort} ) {
         foreach my $sort ( @{ $options{sort} } ) {
@@ -238,11 +145,11 @@ sub build_query {
     my $display_library_facets = C4::Context->preference('DisplayLibraryFacets');
     if (   $display_library_facets eq 'both'
         or $display_library_facets eq 'home' ) {
-        $res->{aggregations}{homebranch} = { terms => { field => "homebranch__facet", size => $size } };
+        $res->{aggregations}{homebranch} = { terms => { field => "homebranch__facet" } };
     }
     if (   $display_library_facets eq 'both'
         or $display_library_facets eq 'holding' ) {
-        $res->{aggregations}{holdingbranch} = { terms => { field => "holdingbranch__facet", size => $size } };
+        $res->{aggregations}{holdingbranch} = { terms => { field => "holdingbranch__facet" } };
     }
     return $res;
 }
@@ -282,7 +189,7 @@ sub build_query_compat {
     } else {
         my @sort_params  = $self->_convert_sort_fields(@$sort_by);
         my @index_params = $self->_convert_index_fields(@$indexes);
-        $limits       = $self->_fix_limit_special_cases($orig_limits);
+        my $limits       = $self->_fix_limit_special_cases($orig_limits);
         if ( $params->{suppress} ) { push @$limits, "suppress:false"; }
         # Merge the indexes in with the search terms and the operands so that
         # each search thing is a handy unit.
@@ -570,7 +477,6 @@ sub build_authorities_query_compat {
     # This turns the old-style many-options argument form into a more
     # extensible hash form that is understood by L<build_authorities_query>.
     my @searches;
-    my $mappings = $self->get_elasticsearch_mappings();
 
     # Convert to lower case
     $marclist = [map(lc, @{$marclist})];
@@ -579,10 +485,8 @@ sub build_authorities_query_compat {
     my @indexes;
     # Make sure everything exists
     foreach my $m (@$marclist) {
-
         $m = exists $koha_to_index_name->{$m} ? $koha_to_index_name->{$m} : $m;
         push @indexes, $m;
-        warn "Unknown search field $m in marclist" unless (defined $mappings->{data}->{properties}->{$m} || $m eq '' || $m eq 'match-heading');
     }
     for ( my $i = 0 ; $i < @$value ; $i++ ) {
         next unless $value->[$i]; #clean empty form values, ES doesn't like undefined searches
@@ -713,6 +617,107 @@ sub _convert_sort_fields {
     } @sort_by;
 }
 
+=head2 _convert_index_fields
+
+    my @index_params = $self->_convert_index_fields(@indexes);
+
+Converts zebra-style search index notation into elasticsearch-style.
+
+C<@indexes> is an array of index names, as presented to L<build_query_compat>,
+and it returns something that can be sent to L<build_query>.
+
+B<TODO>: this will pull from the elasticsearch mappings table to figure out
+types.
+
+=cut
+
+our %index_field_convert = (
+    'kw' => '',
+    'ab' => 'abstract',
+    'au' => 'author',
+    'lcn' => 'local-classification',
+    'callnum' => 'local-classification',
+    'record-type' => 'rtype',
+    'mc-rtype' => 'rtype',
+    'mus' => 'rtype',
+    'lc-card' => 'lc-card-number',
+    'sn' => 'local-number',
+    'biblionumber' => 'local-number',
+    'yr' => 'date-of-publication',
+    'pubdate' => 'date-of-publication',
+    'acqdate' => 'date-of-acquisition',
+    'date/time-last-modified' => 'date-time-last-modified',
+    'dtlm' => 'date-time-last-modified',
+    'diss' => 'dissertation-information',
+    'nb' => 'isbn',
+    'ns' => 'issn',
+    'music-number' => 'identifier-publisher-for-music',
+    'number-music-publisher' => 'identifier-publisher-for-music',
+    'music' => 'identifier-publisher-for-music',
+    'ident' => 'identifier-standard',
+    'cpn' => 'corporate-name',
+    'cfn' => 'conference-name',
+    'pn' => 'personal-name',
+    'pb' => 'publisher',
+    'pv' => 'provider',
+    'nt' => 'note',
+    'notes' => 'note',
+    'rcn' => 'record-control-number',
+    'su' => 'subject',
+    'su-to' => 'subject',
+    #'su-geo' => 'subject',
+    'su-ut' => 'subject',
+    'ti' => 'title',
+    'se' => 'title-series',
+    'ut' => 'title-uniform',
+    'an' => 'koha-auth-number',
+    'authority-number' => 'koha-auth-number',
+    'at' => 'authtype',
+    'he' => 'heading',
+    'rank' => 'relevance',
+    'phr' => 'st-phrase',
+    'wrdl' => 'st-word-list',
+    'rt' => 'right-truncation',
+    'rtrn' => 'right-truncation',
+    'ltrn' => 'left-truncation',
+    'rltrn' => 'left-and-right',
+    'mc-itemtype' => 'itemtype',
+    'mc-ccode' => 'ccode',
+    'branch' => 'homebranch',
+    'mc-loc' => 'location',
+    'loc' => 'location',
+    'stocknumber' => 'number-local-acquisition',
+    'inv' => 'number-local-acquisition',
+    'bc' => 'barcode',
+    'mc-itype' => 'itype',
+    'aub' => 'author-personal-bibliography',
+    'auo' => 'author-in-order',
+    'ff8-22' => 'ta',
+    'aud' => 'ta',
+    'audience' => 'ta',
+    'frequency-code' => 'ff8-18',
+    'illustration-code' => 'ff8-18-21',
+    'regularity-code' => 'ff8-19',
+    'type-of-serial' => 'ff8-21',
+    'format' => 'ff8-23',
+    'conference-code' => 'ff8-29',
+    'festschrift-indicator' => 'ff8-30',
+    'index-indicator' => 'ff8-31',
+    'fiction' => 'lf',
+    'fic' => 'lf',
+    'literature-code' => 'lf',
+    'biography' => 'bio',
+    'ff8-34' => 'bio',
+    'biography-code' => 'bio',
+    'l-format' => 'ff7-01-02',
+    'lex' => 'lexile-number',
+    'hi' => 'host-item-number',
+    'itu' => 'index-term-uncontrolled',
+    'itg' => 'index-term-genre',
+);
+my $field_name_pattern = '[\w\-]+';
+my $multi_field_pattern = "(?:\\.$field_name_pattern)*";
+
 sub _convert_index_fields {
     my ( $self, @indexes ) = @_;
 
@@ -736,7 +741,7 @@ sub _convert_index_fields {
             type  => $index_type_convert{ $t // '__default' }
         };
         $r->{field} = ($mc . $r->{field}) if $mc && $r->{field};
-        $r->{field} || $r->{type} ? $r : undef;
+        $r->{field} ? $r : undef;
     } @indexes;
 }
 
@@ -945,8 +950,7 @@ sub _clean_search_term {
     }
 
     # Remove unquoted colons that have whitespace on either side of them
-    $term =~ s/(:+)(\s+)$lookahead/$2/g;
-    $term =~ s/(\s+)(:+)$lookahead/$1/g;
+    $term =~ s/(\:[:\s]+|[:\s]+:)$lookahead//g;
 
     $term = $self->_query_regex_escape_process($term);
 
@@ -1020,7 +1024,6 @@ sub _fix_limit_special_cases {
         }
         else {
             my ( $field, $term ) = $l =~ /^\s*([\w,-]*?):(.*)/;
-            $field =~ s/,phr$//; #We are quoting all the limits as phrase, this prevents from quoting again later
             if ( defined($field) && defined($term) ) {
                 push @new_lim, "$field:(\"$term\")";
             }
@@ -1046,6 +1049,11 @@ to avoid sorting on a tokenized value.
 sub _sort_field {
     my ($self, $f) = @_;
 
+    return $f . ".raw";
+    warn "f = $f";
+    use YAML;
+    #warn Dump($self);
+    return $f;
     my $mappings = $self->get_elasticsearch_mappings();
     my $textField = defined $mappings->{data}{properties}{$f}{type} && $mappings->{data}{properties}{$f}{type} eq 'text';
     if (!defined $self->sort_fields()->{$f} || $self->sort_fields()->{$f}) {
@@ -1118,7 +1126,7 @@ sub _split_query {
 Generate a list of searchable fields to be used for Elasticsearch queries
 applied to multiple fields.
 
-Returns an arrayref of field names for either OPAC or staff interface, with
+Returns an arrayref of field names for either OPAC or Staff client, with
 possible weights and subfield appended to each field name depending on the
 options provided.
 
@@ -1127,7 +1135,7 @@ options provided.
 =item C<$params>
 
 Hashref with options. The parameter C<is_opac> indicates whether the searchable
-fields for OPAC or staff interface should be retrieved. If C<weighted_fields> is set
+fields for OPAC or Staff client should be retrieved. If C<weighted_fields> is set
 fields weights will be applied on returned fields. C<subfield> can be used to
 provide a subfield that will be appended to fields as "C<field_name>.C<subfield>".
 
@@ -1145,8 +1153,15 @@ sub _search_fields {
         # can hopefully be removed in the future
         subfield => undef,
     };
+
+    my $index = $self->es->indexes->{$self->index};
+    my $sff = $index->search_fields_for;
+    my $for = $params->{is_opac} ? 'opac' : 'staff';
+    return $sff->{$for};
+
+    # FIXME: Delete
     my $cache = Koha::Caches->get_instance();
-    my $cache_key = 'elasticsearch_search_fields' . ($params->{is_opac} ? '_opac' : '_staff_client') . "_" . $self->index;
+    my $cache_key = 'elasticsearch_search_fields' . ($params->{is_opac} ? '_opac' : '_staff_client');
     my $search_fields = $cache->get_from_cache($cache_key, { unsafe => 1 });
     if (!$search_fields) {
         # The reason we don't use Koha::SearchFields->search here is we don't
@@ -1177,7 +1192,7 @@ sub _search_fields {
         my @search_fields;
         while (my $search_field = $result->next) {
             push @search_fields, [
-                lc $search_field->name,
+                $search_field->name,
                 $search_field->weight ? $search_field->weight : ()
             ];
         }

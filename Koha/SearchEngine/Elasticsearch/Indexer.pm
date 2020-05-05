@@ -1,425 +1,192 @@
 package Koha::SearchEngine::Elasticsearch::Indexer;
 
-# Copyright 2013 Catalyst IT
-#
-# This file is part of Koha.
-#
-# Koha is free software; you can redistribute it and/or modify it
-# under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 3 of the License, or
-# (at your option) any later version.
-#
-# Koha is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with Koha; if not, see <http://www.gnu.org/licenses>.
-
-use Carp;
+use Moo;
 use Modern::Perl;
-use Try::Tiny;
-use List::Util qw(any);
-use base qw(Koha::SearchEngine::Elasticsearch);
-use Data::Dumper;
-
 use Koha::Exceptions;
-use Koha::SearchEngine::Zebra::Indexer;
-use C4::AuthoritiesMarc qw//;
-use C4::Biblio;
 use C4::Context;
-
-=head1 NAME
-
-Koha::SearchEngine::Elasticsearch::Indexer - handles adding new records to the index
-
-=head1 SYNOPSIS
-
-    my $indexer = Koha::SearchEngine::Elasticsearch::Indexer->new(
-        { index => Koha::SearchEngine::BIBLIOS_INDEX } );
-    $indexer->drop_index();
-    $indexer->update_index(\@biblionumbers, \@records);
+use C4::Biblio;
+use Proc::Fork;
+use IPC::Shareable;
+use JSON;
+use YAML;
 
 
-=head1 CONSTANTS
+has indexx => (is => 'rw');
 
-=over 4
+has childs => (is => 'rw', default => 1);
 
-=item C<Koha::SearchEngine::Elasticsearch::Indexer::INDEX_STATUS_OK>
+has total => (is => 'rw', default => 0);
 
-Represents an index state where index is created and in a working state.
+has count => (is => 'rw', default => 0);
 
-=item C<Koha::SearchEngine::Elasticsearch::Indexer::INDEX_STATUS_REINDEX_REQUIRED>
+has range => (is => 'rw', default => '');
 
-Not currently used, but could be useful later, for example if can detect when new field or mapping added.
+has ids => (is => 'rw');
 
-=item C<Koha::SearchEngine::Elasticsearch::Indexer::INDEX_STATUS_RECREATE_REQUIRED>
 
-Representings an index state where index needs to be recreated and is not in a working state.
-
-=back
-
-=cut
-
-use constant {
-    INDEX_STATUS_OK => 0,
-    INDEX_STATUS_REINDEX_REQUIRED => 1,
-    INDEX_STATUS_RECREATE_REQUIRED => 2,
+my $dbquery = {
+    biblios => {
+        count     => "SELECT COUNT(*) FROM biblio",
+        id_exists => "SELECT COUNT(*) FROM biblio WHERE biblionumber=?",
+        getid     => "SELECT biblionumber FROM biblio ORDER BY biblionumber",
+    },
+    authorities => {
+        count     => "SELECT COUNT(*) FROM auth_header",
+        id_exists => "SELECT COUNT(*) FROM auth_header WHERE authid=?",
+        getid     => "SELECT authid FROM auth_header ORDER BY authid",
+    },
 };
 
-=head1 FUNCTIONS
 
-=head2 update_index($biblionums, $records)
+sub getids_existing {
+    my $self = shift;
 
-    try {
-        $self->update_index($biblionums, $records);
-    } catch {
-        die("Something went wrong trying to update index:" .  $_[0]);
-    }
+    return unless $self->range;
 
-Converts C<MARC::Records> C<$records> to Elasticsearch documents and performs
-an update request for these records on the Elasticsearch index.
+    my $dbh = C4::Context->dbh;
+    my $is_auth = $self->indexx->name eq 'authorities';
 
-=over 4
+    my $query = $dbquery->{$self->indexx->name}->{id_exists};
+    my $sth = $dbh->prepare($query);
 
-=item C<$biblionums>
-
-Arrayref of biblio numbers for the C<$records>, the order must be the same as
-and match up with C<$records>.
-
-=item C<$records>
-
-Arrayref of C<MARC::Record>s.
-
-=back
-
-=cut
-
-sub update_index {
-    my ($self, $biblionums, $records) = @_;
-
-    my $documents = $self->marc_records_to_documents($records);
-    my @body;
-    for (my $i = 0; $i < scalar @$biblionums; $i++) {
-        my $id = $biblionums->[$i];
-        my $document = $documents->[$i];
-        push @body, {
-            index => {
-                _id => "$id"
+    my @ids;
+    my $add = sub {
+        my $id = shift;
+        $sth->execute($id);
+        my $found = $sth->fetchall_arrayref();
+        push @ids, $id if $found->[0]->[0];
+    };
+    for my $range ( split /,/, $self->range ) {
+        if ( $range =~ /-/ ) {
+            my ($from, $to) = split /-/, $range;
+            for (my $id=$from; $id <= $to; $id++) {
+                $add->($id);
             }
-        };
-        push @body, $document;
-    }
-    my $response;
-    if (@body) {
-        my $elasticsearch = $self->get_elasticsearch();
-        $response = $elasticsearch->bulk(
-            index => $self->index_name,
-            type => 'data', # is just hard coded in Indexer.pm?
-            body => \@body
-        );
-        if ($response->{errors}) {
-            carp "One or more ElasticSearch errors occurred when indexing documents";
+        }
+        else {
+            $add->($range);
         }
     }
-    return $response;
+
+    $self->ids(\@ids);
+    $self->total(@ids + 0);
 }
 
-=head2 set_index_status_ok
 
-Convenience method for setting index status to C<INDEX_STATUS_OK>.
+sub getids {
+    my ($self, $childs, $child) = @_;
+    $child //= 0;
 
-=cut
+    my $dbh = C4::Context->dbh;
 
-sub set_index_status_ok {
-    my ($self) = @_;
-    $self->index_status(INDEX_STATUS_OK);
-}
-
-=head2 is_index_status_ok
-
-Convenience method for checking if index status is C<INDEX_STATUS_OK>.
-
-=cut
-
-sub is_index_status_ok {
-    my ($self) = @_;
-    return $self->index_status == INDEX_STATUS_OK;
-}
-
-=head2 set_index_status_reindex_required
-
-Convenience method for setting index status to C<INDEX_REINDEX_REQUIRED>.
-
-=cut
-
-sub set_index_status_reindex_required {
-    my ($self) = @_;
-    $self->index_status(INDEX_STATUS_REINDEX_REQUIRED);
-}
-
-=head2 is_index_status_reindex_required
-
-Convenience method for checking if index status is C<INDEX_STATUS_REINDEX_REQUIRED>.
-
-=cut
-
-sub is_index_status_reindex_required {
-    my ($self) = @_;
-    return $self->index_status == INDEX_STATUS_REINDEX_REQUIRED;
-}
-
-=head2 set_index_status_recreate_required
-
-Convenience method for setting index status to C<INDEX_STATUS_RECREATE_REQUIRED>.
-
-=cut
-
-sub set_index_status_recreate_required {
-    my ($self) = @_;
-    $self->index_status(INDEX_STATUS_RECREATE_REQUIRED);
-}
-
-=head2 is_index_status_recreate_required
-
-Convenience method for checking if index status is C<INDEX_STATUS_RECREATE_REQUIRED>.
-
-=cut
-
-sub is_index_status_recreate_required {
-    my ($self) = @_;
-    return $self->index_status == INDEX_STATUS_RECREATE_REQUIRED;
-}
-
-=head2 index_status($status)
-
-Will either set the current index status to C<$status> and return C<$status>,
-or return the current index status if called with no arguments.
-
-=over 4
-
-=item C<$status>
-
-Optional argument. If passed will set current index status to C<$status> if C<$status> is
-a valid status. See L</CONSTANTS>.
-
-=back
-
-=cut
-
-sub index_status {
-    my ($self, $status) = @_;
-    my $key = 'ElasticsearchIndexStatus_' . $self->index;
-
-    if (defined $status) {
-        unless (any { $status == $_ } (
-                INDEX_STATUS_OK,
-                INDEX_STATUS_REINDEX_REQUIRED,
-                INDEX_STATUS_RECREATE_REQUIRED,
-            )
-        ) {
-            Koha::Exceptions::Exception->throw("Invalid index status: $status");
-        }
-        C4::Context->set_preference($key, $status);
-        return $status;
+    if ($self->range) {
+        $self->getids_existing();
+        my $limit = int($self->total / $childs);
+        $limit++ if $self->total % $childs;
+        my $offset = $child * $limit;
+        my @ids = @{$self->ids};
+        @ids = grep { $_ } @ids[$offset..$offset+$limit-1];
+        $self->ids(\@ids);
     }
     else {
-        return C4::Context->preference($key);
+        my $query = $dbquery->{$self->indexx->name}->{count};
+        my $ids = $dbh->selectall_arrayref($query, {});
+        $self->total($ids->[0][0]);
+
+        $query = $dbquery->{$self->indexx->name}->{getid};
+        my $limit = int($self->total / $childs);
+        $limit++ if $self->total % $childs;
+        my $offset = $child * $limit;
+        $query .= " LIMIT $limit OFFSET $offset";
+        $ids = C4::Context->dbh->selectall_arrayref($query, {});
+        $ids = [ map { $_->[0] } @$ids ];
+        $self->ids($ids);
     }
 }
 
-=head2 update_mappings
 
-Generate Elasticsearch mappings from mappings stored in database and
-perform a request to update Elasticsearch index mappings. Will throw an
-error and set index status to C<INDEX_STATUS_RECREATE_REQUIRED> if update
-failes.
+sub indexing_onecore {
+    my ($self, $p) = @_;
 
-=cut
+    my $cb = $p->{cb};
+    $cb->{begin}->($self) if $cb->{begin};
 
-sub update_mappings {
-    my ($self) = @_;
-    my $elasticsearch = $self->get_elasticsearch();
-    my $mappings = $self->get_elasticsearch_mappings();
-
-    foreach my $type (keys %{$mappings}) {
-        try {
-            my $response = $elasticsearch->indices->put_mapping(
-                index => $self->index_name,
-                type => $type,
-                body => {
-                    $type => $mappings->{$type}
-                }
-            );
-        } catch {
-            $self->set_index_status_recreate_required();
-            my $reason = $_[0]->{vars}->{body}->{error}->{reason};
-            my $index_name = $self->index_name;
-            Koha::Exceptions::Exception->throw(
-                error => "Unable to update mappings for index \"$index_name\". Reason was: \"$reason\". Index needs to be recreated and reindexed",
-            );
-        };
+    my $count = 0;
+    my $total = $self->total;
+    for (my $i=0; $i < $total; $i++) {
+        $count++;
+        $self->count($count);
+        $self->indexx->add($self->ids->[$i]);
+        $cb->{add}->($self) if $cb->{add};
     }
-    $self->set_index_status_ok();
+    $self->indexx->submit();
+    $cb->{end}->($self) if $cb->{end};
 }
 
-=head2 update_index_background($biblionums, $records)
 
-This has exactly the same API as C<update_index> however it'll
-return immediately. It'll start a background process that does the adding.
+sub indexing_multicore {
+    my ($self, $p) = @_;
 
-If it fails to add to Elasticsearch then it'll add to a queue that will cause
-it to be updated by a regular index cron job in the future.
+    my $total  = $self->total;
+    my $childs = $p->{childs};
 
-=cut
+    my $cb = $p->{cb};
 
-# TODO implement in the future - I don't know the best way of doing this yet.
-# If fork: make sure process group is changed so apache doesn't wait for us.
+    # 2 variables shared between processes
+    my $handle = tie my $count, 'IPC::Shareable', { key => 'd1', create => 1, destroy => 1 };
+    $count = 0;
+    my $handle_active = tie my $active_childs, 'IPC::Shareable', { key => 'd2', create => 1, destroy => 1 };
+    $active_childs = $childs;
 
-sub update_index_background {
-    my $self = shift;
-    $self->update_index(@_);
-}
-
-=head2 index_records
-
-This function takes an array of record numbers and fetches the records to send to update_index
-for actual indexing.
-
-If $records parameter is provided the records will be used as-is, this is only utilized for authorities
-at the moment.
-
-The other variables are used for parity with Zebra indexing calls. Currently the calls are passed through
-to Zebra as well.
-
-=cut
-
-sub index_records {
-    my ( $self, $record_numbers, $op, $server, $records ) = @_;
-    $record_numbers = [$record_numbers] if ref $record_numbers ne 'ARRAY' && defined $record_numbers;
-    $records = [$records] if ref $records ne 'ARRAY' && defined $records;
-    if ( $op eq 'specialUpdate' ) {
-        my $index_record_numbers;
-        if ($records){
-            $index_record_numbers = $record_numbers;
-        } else {
-            foreach my $record_number ( @$record_numbers ){
-                my $record = _get_record( $record_number, $server );
-                if( $record ){
-                    push @$records, $record;
-                    push @$index_record_numbers, $record_number;
-                }
+    for (my $child = 0; $child < $childs; $child++) {
+        $self->getids($childs, $child);
+        $cb->{begin}->($self) if $child == 0 && $cb->{begin};
+        run_fork { child {
+            my $max = @{$self->ids};
+            for (my $i=0; $i < $max; $i++) {
+                $handle->shlock();
+                $count++;
+                $handle->shunlock();
+                $self->count($count);
+                my $id = $self->ids->[$i];
+                $self->indexx->add($id);
+                $cb->{add}->($self) if $cb->{add};
             }
-        }
-        $self->update_index_background( $index_record_numbers, $records ) if $index_record_numbers && $records;
+            $handle_active->shlock();
+            $active_childs--;
+            $handle_active->shunlock();
+            $self->indexx->submit();
+            exit;
+        } };
     }
-    elsif ( $op eq 'recordDelete' ) {
-        $self->delete_index_background( $record_numbers );
+    while ($active_childs) {
+        sleep(2);
     }
-    #FIXME Current behaviour is to index Zebra when using ES, at some point we should stop
-    Koha::SearchEngine::Zebra::Indexer::index_records( $self, $record_numbers, $op, $server, undef );
+    $cb->{end}->($self) if $cb->{end};
+    exit;
 }
 
-sub _get_record {
-    my ( $id, $server ) = @_;
-    return $server eq 'biblioserver'
-        ? C4::Biblio::GetMarcBiblio({ biblionumber => $id, embed_items  => 1 })
-        : C4::AuthoritiesMarc::GetAuthority($id);
-}
 
-=head2 delete_index($biblionums)
+=head2 indexing
 
-C<$biblionums> is an arrayref of biblionumbers to delete from the index.
+Two types of indexing: (1) ids indexing, or (2) full indexing.
 
 =cut
+sub indexing {
+    my ($self, $p) = @_;
 
-sub delete_index {
-    my ($self, $biblionums) = @_;
+    $p //= {};
 
-    my $elasticsearch = $self->get_elasticsearch();
-    my @body = map { { delete => { _id => "$_" } } } @{$biblionums};
-    my $result = $elasticsearch->bulk(
-        index => $self->index_name,
-        type => 'data',
-        body => \@body,
-    );
-    if ($result->{errors}) {
-        croak "An Elasticsearch error occurred during bulk delete";
+    # Index all records
+    my $childs = $p->{childs};
+    if ($childs == 1) {
+        $self->getids(1,0);
+        $self->indexing_onecore($p);
+    }
+    else {
+        $self->indexing_multicore($p);
     }
 }
 
-=head2 delete_index_background($biblionums)
-
-Identical to L</delete_index($biblionums)>
-
-=cut
-
-# TODO: Should be made async
-sub delete_index_background {
-    my $self = shift;
-    $self->delete_index(@_);
-}
-
-=head2 drop_index
-
-Drops the index from the Elasticsearch server.
-
-=cut
-
-sub drop_index {
-    my ($self) = @_;
-    if ($self->index_exists) {
-        my $elasticsearch = $self->get_elasticsearch();
-        $elasticsearch->indices->delete(index => $self->index_name);
-        $self->set_index_status_recreate_required();
-    }
-}
-
-=head2 create_index
-
-Creates the index (including mappings) on the Elasticsearch server.
-
-=cut
-
-sub create_index {
-    my ($self) = @_;
-    my $settings = $self->get_elasticsearch_settings();
-    my $elasticsearch = $self->get_elasticsearch();
-    $elasticsearch->indices->create(
-        index => $self->index_name,
-        body => {
-            settings => $settings
-        }
-    );
-    $self->update_mappings();
-}
-
-=head2 index_exists
-
-Checks if index has been created on the Elasticsearch server. Returns C<1> or the
-empty string to indicate whether index exists or not.
-
-=cut
-
-sub index_exists {
-    my ($self) = @_;
-    my $elasticsearch = $self->get_elasticsearch();
-    return $elasticsearch->indices->exists(
-        index => $self->index_name,
-    );
-}
 
 1;
-
-__END__
-
-=head1 AUTHOR
-
-=over 4
-
-=item Chris Cormack C<< <chrisc@catalyst.net.nz> >>
-
-=item Robin Sheat C<< <robin@catalyst.net.nz> >>
-
-=back

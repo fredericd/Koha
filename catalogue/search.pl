@@ -435,10 +435,10 @@ my $page = $cgi->param('page') || 1;
 # Define some global variables
 my ( $error,$query,$simple_query,$query_cgi,$query_desc,$limit,$limit_cgi,$limit_desc,$query_type);
 
-my $builder = Koha::SearchEngine::QueryBuilder->new(
-    { index => $Koha::SearchEngine::BIBLIOS_INDEX } );
 my $searcher = Koha::SearchEngine::Search->new(
     { index => $Koha::SearchEngine::BIBLIOS_INDEX } );
+my $builder = Koha::SearchEngine::QueryBuilder->new(
+    { index => $Koha::SearchEngine::BIBLIOS_INDEX, es => $searcher } );
 
 ## I. BUILD THE QUERY
 (

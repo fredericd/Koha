@@ -39,8 +39,8 @@ use Koha::SearchEngine::QueryBuilder;
 my $searchengine = C4::Context->preference("SearchEngine");
 my ($builder, $searcher);
 #$searchengine = 'Zebra'; # XXX
-$builder  = Koha::SearchEngine::QueryBuilder->new({index => 'biblios'});
 $searcher = Koha::SearchEngine::Search->new({index => 'biblios'});
+$builder  = Koha::SearchEngine::QueryBuilder->new({index => 'biblios', es => $searcher});
 
 use C4::Output;
 use C4::Auth qw(:DEFAULT get_session);

@@ -69,10 +69,10 @@ if ($query) {
 
     my $builtquery;
     my $query_cgi;
-    my $builder = Koha::SearchEngine::QueryBuilder->new(
-        { index => $Koha::SearchEngine::BIBLIOS_INDEX } );
     my $searcher = Koha::SearchEngine::Search->new(
         { index => $Koha::SearchEngine::BIBLIOS_INDEX } );
+    my $builder = Koha::SearchEngine::QueryBuilder->new(
+        { index => $Koha::SearchEngine::BIBLIOS_INDEX, es => $searcher } );
     ( undef, $builtquery, undef, $query_cgi, undef, undef, undef, undef, undef, undef ) =
       $builder->build_query_compat( undef, \@operands, undef, undef, undef, 0, $lang, { weighted_fields => 1 });
 

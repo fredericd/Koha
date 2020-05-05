@@ -19,7 +19,7 @@ package Koha::SearchEngine::Elasticsearch::Browse;
 
 =head1 NAME
 
-Koha::SearchEngine::ElasticSearch::Browse - browse functions for Elasticsearch
+Koha::SearchEngine::Elasticsearch::Browse - browse functions for Elasticsearch
 
 =head1 SYNOPSIS
 

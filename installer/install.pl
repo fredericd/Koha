@@ -256,7 +256,7 @@ elsif ( $step && $step == 3 ) {
             "list"        => $list
         );
         use Koha::SearchEngine::Elasticsearch;
-        Koha::SearchEngine::Elasticsearch->reset_elasticsearch_mappings;
+        Koha::SearchEngine::Elasticsearch::reset_conf();
         $template->param( "$op" => 1 );
     }
     elsif ( $op && $op eq 'selectframeworks' ) {

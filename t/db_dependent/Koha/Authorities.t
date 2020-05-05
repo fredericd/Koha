@@ -124,7 +124,7 @@ subtest 'Testing reporting_tag_xml in MergeRequest' => sub {
 };
 
 subtest 'Trivial tests for get_usage_count and linked_biblionumbers' => sub {
-    plan tests => 5;
+    plan tests => 6;
 
     # NOTE: We are not testing $searcher->simple_search_compat here. Suppose
     # that should be done in t/db../Koha/SearchEngine?
@@ -134,9 +134,11 @@ subtest 'Trivial tests for get_usage_count and linked_biblionumbers' => sub {
     t::lib::Mocks::mock_preference('SearchEngine', 'Zebra');
     $mods->{zebra} = Test::MockModule->new( 'Koha::SearchEngine::Zebra::Search' );
     $mods->{elastic} = Test::MockModule->new( 'Koha::SearchEngine::Elasticsearch::Search' );
+    $mods->{es} = Test::MockModule->new( 'Koha::SearchEngine::ES::Search' );
     $mods->{biblio} = Test::MockModule->new( 'C4::Biblio' );
     $mods->{zebra}->mock( 'simple_search_compat', \&simple_search_compat );
     $mods->{elastic}->mock( 'simple_search_compat', \&simple_search_compat );
+    $mods->{es}->mock( 'simple_search_compat', \&simple_search_compat );
     $mods->{biblio}->mock( 'GetMarcFromKohaField', sub { return @$koha_fields; });
 
     my $auth1 = $builder->build({ source => 'AuthHeader' });
@@ -160,6 +162,9 @@ subtest 'Trivial tests for get_usage_count and linked_biblionumbers' => sub {
     t::lib::Mocks::mock_preference('SearchEngine', 'Elasticsearch');
     cmp_deeply( [ $auth1->linked_biblionumbers ], [ 2001 ],
         'linked_biblionumbers with Elasticsearch' );
+    t::lib::Mocks::mock_preference('SearchEngine', 'ES');
+    cmp_deeply( [ $auth1->linked_biblionumbers ], [ 2001 ],
+        'linked_biblionumbers with ES' );
     t::lib::Mocks::mock_preference('SearchEngine', 'Zebra');
 };
 

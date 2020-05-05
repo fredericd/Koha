@@ -1,0 +1,454 @@
+{
+  "indexes" : {
+    "authorities" : {
+      "authtype" : { "source" : { "map" : "942a" } },
+      "Corporate-name-see-also-from" : { "source" : { "map" : "510abcdefghklmnoprstvxyz" } },
+      "Corporate-name-see-from" : { "source" : { "map" : "410abcdefghklmnoprstvxyz" } },
+      "Descriptive-cataloging-rules" : { "source" : { "map" : "008_/10" } },
+      "Heading" : {
+        "source" : {
+          "map" : [
+            "100abcdefghjklmnopqrstvxyz",
+            "110abcdefghjklnpqstvxyz",
+            "111acdefghjklmnopqrstvxyz",
+            "130adefghjklnpqstvxyz",
+            "148abcdefghjklmnopqrstvxyz",
+            "150abgvxyz",
+            "151agvxyz",
+            "155avxyz"
+          ]
+        }
+      },
+      "Heading-Main" : {
+        "source" : {
+          "map" : [
+            "100a",
+            "110a",
+            "111a",
+            "130a",
+            "148a",
+            "150a",
+            "151a",
+            "155a"
+          ]
+        }
+      },
+      "Heading-use-main-or-added-entry" : { "source" : { "map" : "008_/14" } },
+      "Heading-use-subject-added-entry" : { "source" : { "map" : "008_/15" } },
+      "Heading-use-series-added-entry" : { "source" : { "map" : "008_/16" } },
+      "Kind-of-record" : { "source" : { "map" : "008_/9" } },
+      "lc-card-number" : { "source" : { "map" : ["010a","010z"] } },
+      "local-number" : { "source" : { "map" : "001" } },
+      "Match" : {
+        "source" : {
+          "map" : [
+            "100abcdefghjklmnopqrstvxyz",
+            "111acdefghjklnpqstvxyz",
+            "400abcdefghjklmnopqrstvxyz",
+            "410abcdefghklmnoprstvxyz",
+            "411acdefghjklnpqstvxyz",
+            "500abcdefghjklmnopqrstvxyz",
+            "510abcdefghklmnoprstvxyz",
+            "511acdefghjklnpqstvxyz"
+          ]
+        }
+      },
+      "Match-heading" : {
+        "source" : {
+          "map" : [
+            "100abcdefghjklmnopqrstvxyz",
+            "111acdefghjklnpqstvxyz"
+          ]
+        }
+      },
+      "Match-heading-see-from" : {
+        "source" : {
+          "map" : [
+            "400abcdefghjklmnopqrstvxyz",
+            "410abcdefghklmnoprstvxyz",
+            "411acdefghjklnpqstvxyz"
+          ]
+        }
+      },
+      "Meeting-name" : { "source" : { "map" : "111acdefghjklnpqstvxyz" } },
+      "Meeting-name-heading" : { "source" : { "map" : "111acdefghjklnpqstvxyz" } },
+      "Meeting-name-see-also-from" : { "source" : { "map" : "511acdefghjklnpqstvxyz" } },
+      "Meeting-name-see-from" : { "source" : { "map" : "411acdefghjklnpqstvxyz" } },
+      "personal-name" : { "source" : { "map" : "100abcdefghjklmnopqrstvxyz" } },
+      "Personal-name-heading" : { "source" : { "map" : "100abcdefghjklmnopqrstvxyz" } },
+      "Personal-name-see-also-from" : { "source" : { "map" : "500abcdefghjklmnopqrstvxyz" } },
+      "Personal-name-see-from" : { "source" : { "map" : "400abcdefghjklmnopqrstvxyz" } },
+      "record-source" : { "source" : { "map" : "040acd" } },
+      "See-from" : {
+        "source" : {
+          "map" : [
+            "400abcdefghjklmnopqrstvxyz",
+            "410abcdefghklmnoprstvxyz",
+            "411abcdefghjklmnopqrstvxyz",
+            "430abcdefghklmnoprstvxyz",
+            "440abcdefghjklmnopqrstvxyz",
+            "441abcdefghklmnoprstvxyz",
+            "444abcdefghjklmnopqrstvxyz",
+            "447abcdefghjklmnopqrstvxyz",
+            "448abcdefghklmnoprstvxyz",
+            "462abcdefghklmnoprstvxyz"
+          ]
+        }
+      },
+      "See-also-from" : {
+        "source" : {
+          "map" : [
+            "500abcdefghjklmnopqrstvxyz",
+            "510abcdefghklmnoprstvxyz",
+            "511abcdefghjklmnopqrstvxyz",
+            "530abcdefghklmnoprstvxyz",
+            "547abcdefghjklmnopqrstvxyz",
+            "548abcdefghklmnoprstvxyz",
+            "550abcdefghjklmnopqrstvxyz",
+            "551abcdefghklmnoprstvxyz",
+            "555abcdefghjklmnopqrstvxyz",
+            "562abcdefghklmnoprstvxyz"
+          ]
+        }
+      },
+      "Subject-heading-thesaurus" : { "source" : { "map" : "008_/11" } }
+    },
+    "biblios" : {
+      "abstract" : { "source" : { "map" : "520" } },
+      "acqsource" : { "source" : { "map" : "952e" } },
+      "arl" : { "source" : { "map" : "526c" } },
+      "arp" : { "source" : { "map" : "526d" } },
+      "author" : {
+        "type" : "string",
+        "source" : [
+          {
+            "index" : ["search","facet","suggestible"],
+            "map" : ["100a","110a","111a","700a"]
+          },
+          {
+            "map" : ["245c"]
+          }
+        ]
+      },
+      "author-in-order" : { "source" : { "map" : "245c" } },
+      "author-name-corporate" : {
+        "source" : {
+            "map" : ["110","111","711","810","811"]
+        }
+      },
+      "author-name-personal" : { "source" : { "map" : ["100","400","700","800"] } },
+      "author-personal-bibliography" : { "source" : { "map" : "100a" } },
+      "author-title" : {
+        "source" : {
+          "map" : [
+            "100","110","111",
+            "400t","410t","411t",
+            "700t","710t","711t",
+            "800t","810t","811t"
+          ]
+        }
+      },
+      "barcode" : { "source" : { "map" : "952p" } },
+      "bgf-number" : { "source" : { "map" : "015" } },
+      "bnb-card-number" : { "source" : { "map" : "015" } },
+      "bib-level" : { "source" : { "map" : "leader_/7" } },
+      "biblioitemnumber" : { "source" : { "map" : "999d" } },
+      "bio" : { "source" : { "map" : "008_/34" } },
+      "ccode" : {
+        "source" : {
+          "index" : ["search","facet"],
+          "map" : "9528"
+        }
+      },
+      "classification-source" : { "source" : { "map" : "9522" } },
+      "cn-bib-sort" : { "source" : { "map" : "9426" } },
+      "cn-bib-source" : { "source" : { "map" : "9422" } },
+      "cn-class" : { "source" : { "map" : "942h" } },
+      "cn-item" : { "source" : { "map" : "942i" } },
+      "cn-prefix" : { "source" : { "map" : "942k" } },
+      "cn-sort" : { "source" : { "map" : "9526" } },
+      "cn-suffix" : { "source" : { "map" : "942m" } },
+      "code-geographic" : { "source" : { "map" : "043" } },
+      "code-institution" : { "source" : { "map" : "040" } },
+      "coded-location-qualifier" : { "source" : { "map" : "952f" } },
+      "coden" : { "source" : { "map" : "030" } },
+      "conference-name" : { "source" : { "map" : ["111","411","611","711","811"] } },
+      "control-number" : { "source" : { "map" : "001" } },
+      "copydate" : {
+        "type" : "date",
+        "source" : {
+          "index" : ["search","facet"],
+          "map" : "260c"
+        }
+      },
+      "copynumber" : { "source" : { "map" : "952t" } },
+      "corporate-name" : { "source" : { "map" : ["110","410","610","710","810"] } },
+      "cross-reference" : { "source" : { "map" : ["1009","2459","7009"] } },
+      "ctype" : { "source" : { "map" : "008_/24-27" } },
+      "curriculum" : { "source" : { "map" : ["658a","658b","658c"] } },
+      "damaged" : { "source" : { "map" : "9524" } },
+      "date-entered-on-file" : { "source" : { "map" : "008_/0-5" } },
+      "date-of-acquisition" : {
+        "type" : "date",
+        "source" : {
+          "map" : "952d",
+          "index" : ["search","sort"]
+        }
+      },
+      "date-of-publication" : {
+        "source" : {
+          "index" : ["search","sort"],
+          "map" : "008_/7-10"
+        }
+      },
+      "date-time-last-modified" : { "source" : { "map" : "005" } },
+      "datelastborrowed" : { "source" : { "map" : "952s" } },
+      "datelastseen" : { "source" : { "map" : "952r" } },
+      "dewey-classification" : { "source" : { "map" : "082" } },
+      "dissertation-information" : { "source" : { "map" : "502" } },
+      "editor" : { "source" : { "map" : ["100a","700"] } },
+      "extent" : { "source" : { "map" : "300" } },
+      "ff7-00" : { "source" : { "map" : "007_/0" } },
+      "ff7-01" : { "source" : { "map" : "007_/1" } },
+      "ff7-01-02" : { "source" : { "map" : "007_/0-1" } },
+      "ff7-02" : { "source" : { "map" : "007_/2" } },
+      "ff8-23" : { "source" : { "map" : "008_/23" } },
+      "ff8-29" : { "source" : { "map" : "008_/29" } },
+      "geographic-class" : { "source" : { "map" : "052" } },
+      "holdingbranch" : {
+        "source" : {
+          "index" : ["search","facet" ],
+          "map" : "952b"
+        }
+      },
+      "homebranch" : {
+        "source" : {
+          "map" : "952a",
+          "index" : ["search","facet"]
+        }
+      },
+      "host-item" : { "source" : { "map" : ["773a","773t"] } },
+      "host-item-number" : {
+        "type" : "number",
+        "source" : { "map" : "7739" }
+      },
+      "identifier-other" : { "source" : { "map" : ["024a","024a"] } },
+      "identifier-publisher-for-music" : { "source" : { "map" : "028" } },
+      "identifier-standard" : {
+        "type" : "stdno",
+        "source" : { "map" : ["010","011","015","017","018","020a","022a"] }
+      },
+      "index-term-uncontrolled" : { "source" : { "map" : "653a" } },
+      "indexed-by" : { "source" : { "map" : "510" } },
+      "index-term-genre" : { "source" : { "map" : "655a" } },
+      "interest-age-level" : { "source" : { "map" : "521a" } },
+      "interest-grade-level" : { "source" : { "map" : "521a" } },
+      "isbn" : {
+        "type" : "isbn",
+        "source" : {
+          "plugin" : {
+            "ISBN": {
+              "map":["020a"]
+            }
+          }
+         }
+      },
+      "issn" : {
+        "type" : "stdno",
+        "source" : { "map" : "022a" }
+      },
+      "issues" : {
+        "type" : "sum",
+        "source" : {
+          "map" : "952l",
+          "index" : ["search","sort"]
+        }
+      },
+      "itemnumber" : {
+        "type" : "number",
+        "source" : { "map" : "9529" }
+      },
+      "itemtype" : { "source" : { "map" : "942c" } },
+      "itype" : {
+        "source" : {
+          "index" : ["search","facet"],
+          "map" : ["942c","952y"]
+        }
+      },
+      "koha-auth-number" : {
+        "source" : {
+          "map" : [
+            "1009","1109","1119","1309","2459","4009","4109","4409",
+            "4909","6009","6109","6119","6309","6489","6509","6519",
+            "6529","6539","6549","6559","6569","6579","6629","6909",
+            "6919","6969","6979","6989","6999","7009","7109","7119",
+            "7309","7519","7969","7979","7989","7999","8009","8109",
+            "8119","8309","8969","8979","8989","8999"
+          ]
+        }
+      },
+      "language-original" : { "source" : { "map" : "041h" } },
+      "lc-card-number" : { "source" : { "map" : ["010","011"] } },
+      "lc-call-number" : { "source" : { "map" : "050b" } },
+      "lexile-number" : { "source" : { "map" : "521a" } },
+      "lf" : { "source" : { "map" : "008_/33" } },
+      "llength" : { "source" : { "map" : "leader_/0-4" } },
+      "ln-audio" : { "source" : { "map" :"041a" } },
+      "ln-subtitle" : { "source" : { "map" : "041j" } },
+      "local-classification" : {
+        "source" : {
+          "index" : ["search","suggestible"],
+          "map" : "952o"
+        }
+      },
+      "local-number" : { "source" : { "map" : "999c" } },
+      "location" : {
+        "source" : {
+          "index" : ["search","facet"],
+          "map" : "952c"
+        }
+      },
+      "ln" : {
+        "source" : {
+          "map" : "008_/35-37",
+          "index" : ["search","facet"]
+        }
+      },
+      "lost" : { "source" : { "map" : "9521" } },
+      "map-scale" : { "source" : { "map" : "034" } },
+      "material-type" : { "source" : { "map" : "007" } },
+      "materials-specified" : { "source" : { "map" : "9523" } },
+      "microform-generation" : { "source" : { "map" : "007_/11" } },
+      "music-key" : { "source" : { "map" : ["130r","240r","243r","630r","700r","730r"] } },
+      "nal-call-number" : { "source" : { "map" : "070" } },
+      "name" : {
+        "source" : {
+          "map" : ["100","110","111","400","600a","610","611","700","710","711","800","810","811"]
+        }
+      },
+      "name-and-title" : {
+        "source" : {
+          "map" : [
+            "100","110","111",
+            "400a","400t","410a","411a",
+            "600a","600t","610a","610t","611a","611t",
+            "700t","710a","710t","711a",
+            "800a","800t","810a","810t","811a","811t"
+          ]
+        }
+      },
+      "name-geographic" : { "source" : { "map" : ["651","751a"] } },
+      "nlm-call-number" : { "source" : { "map" : "060" } },
+      "not-onloan-count" : { "source" : { "map" : "999x" } },
+      "notforloan" : {
+        "type" : "number",
+        "source" : { "map" : "9527" }
+      },
+      "note" : { "source" : { "map" : ["500","505","590","952z"] } },
+      "number-db" : { "source" : { "map" : "015" } },
+      "number-govt-pub" : { "source" : { "map" : "086" } },
+      "number-legal-deposit" : { "source" : { "map" : "017" } },
+      "number-local-acquisition" : { "source" : { "map" : "952i" } },
+      "number-natl-biblio" : { "source" : { "map" : "015" } },
+      "onloan" : {
+        "type" : "boolean",
+        "source" : { "map" : "952q" }
+      },
+      "other-control-number" : { "source" : { "map" : "035" } },
+      "personal-name" : { "source" : { "map" : ["100","400","600a","700","800"] } },
+      "pl" : { "source" : { "map" : "008_/15-17" } },
+      "price" : { "source" : { "map" : "952g" } },
+      "provider" : { "source" : { "map" : ["260","264"] } },
+      "publisher" : {
+        "source" : {
+          "map" : "260b",
+          "index" : ["search","facet"]
+        }
+      },
+      "reading-grade-level" : { "source" : { "map" : "521a" } },
+      "record-source" : { "source" : { "map" : "008_/39" } },
+      "record-control-number" : {
+        "source" : {
+          "map" : [
+            "770w","772w","773w","774w","775w","776w","777w","780w","785w","787w",
+            "800w","810w","811w","830w"
+          ]
+        }
+      },
+      "related-periodical" : { "source" : { "map" : ["247","780","785"] } },
+      "replacementprice" : { "source" : { "map" : "952v" } },
+      "replacementpricedate" : { "source" : { "map" : "952w" } },
+      "report-number" : { "source" : { "map" : "027" } },
+      "renewals" : { "source" : { "map" : "952m" } },
+      "reserves" : { "source" : { "map" : "952n" } },
+      "restricted" : { "source" : { "map" : "9525" } },
+      "rtype" : { "source" : { "map" : "leader_/6" } },
+      "stack" : { "source" : { "map" : "952j" } },
+      "stock-number" : { "source" : { "map" : "037" } },
+      "su-geo" : {
+        "source" : {
+          "index" : ["search","facet"],
+          "map" : "651a"
+        }
+      },
+      "subject" : {
+        "source" : [
+          {
+            "index" : ["search","facet","suggestible"],
+            "map" : [
+              "600a","600t","610a","610t","611","630n",
+              "630r","650a","650b","650c","650d","650v",
+              "650x","650y","650z","651","653a"
+            ]
+          }
+        ]
+      },
+      "subject-name-personal" : { "source" : { "map" : "600a" } },
+      "suppress" : {
+        "type" : "boolean",
+        "source" : { "map" : "942n" }
+      },
+      "ta" : { "source" : { "map" : "008_/22" } },
+      "thematic-number" : {
+        "source" : {
+          "map" : ["130n","240n","243n","630n","700n","730n"]
+        }
+      },
+      "title-abbreviated" : { "source" : { "map" : ["210","211","246"] } },
+      "title-collective" : { "source" : { "map" : "243" } },
+      "title-cover" : { "source" : { "map" : "245a" } },
+      "title-expanded" : { "source" : { "map" : ["214","246"] } },
+      "title-former" : { "source" : { "map" : ["246","247","780"] } },
+      "title-key" : { "source" : { "map" : "222" } },
+      "title-later" : { "source" : { "map" : "785" } },
+      "title-other-variant" : { "source" : { "map" : ["212","247","740"] } },
+      "title-series" : {
+        "type" : "string",
+        "source" : {
+          "map" : ["440a","490a"],
+          "index" : ["search","facet"]
+        }
+      },
+      "title-uniform" : { "source" : { "map" : ["130","240","700t","710t","711t","730"] } },
+      "title" : {
+        "source" : [
+          {
+            "map" : "245a",
+            "index" : ["search","sort","suggestible"]
+          },
+          {
+            "map" : ["246","247","490a","505t","700t","710t","711t"],
+            "index" : ["search","suggestible"]
+          },
+          {
+            "map" : ["130","210","211","212","214","222","240","730","740","780","785"]
+          }
+        ]
+      },
+      "totalissues" : { "source" : { "map" : "9420" } },
+      "udc-classification" : { "source" : { "map" : "080" } },
+      "uri" : { "source" : { "map" : "952u" } },
+      "withdrawn" : { "source" : { "map" : "9520" } }
+    }
+  }
+}

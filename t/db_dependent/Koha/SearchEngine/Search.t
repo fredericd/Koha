@@ -21,7 +21,7 @@ my $schema  = Koha::Database->new->schema;
 $schema->storage->txn_begin;
 
 subtest 'Test extract_biblionumber' => sub {
-    plan tests => 2;
+    plan tests => 3;
 
     t::lib::Mocks::mock_preference( 'SearchEngine', 'Zebra' );
     my $biblio_mod = Test::MockModule->new( 'C4::Biblio' );
@@ -41,7 +41,14 @@ subtest 'Test extract_biblionumber' => sub {
     $koha_fields = [ '999', 'c' ];
     $searcher = Koha::SearchEngine::Search->new({ index => 'biblios' });
     $bibno = $searcher->extract_biblionumber( test_record() );
-    is( $bibno, 4567, 'Extracted biblio number for Zebra' );
+    is( $bibno, 4567, 'Extracted biblio number for Elasticsearch' );
+
+    # Now use 999c with ES
+    t::lib::Mocks::mock_preference( 'SearchEngine', 'ES' );
+    $koha_fields = [ '999', 'c' ];
+    $searcher = Koha::SearchEngine::Search->new({ index => 'biblios' });
+    $bibno = $searcher->extract_biblionumber( test_record() );
+    is( $bibno, 4567, 'Extracted biblio number for ES' );
 };
 
 # -- Helper routine

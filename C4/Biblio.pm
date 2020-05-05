@@ -2584,8 +2584,9 @@ $server is authorityserver or biblioserver
 =cut
 
 sub ModZebra {
+###Accepts a $server variable thus we can use it for biblios authorities or other zebra dbs
     my ( $record_number, $op, $server ) = @_;
-    $debug && warn "ModZebra: updates requested for: $record_number $op $server\n";
+    $debug && warn "ModZebra: update requested for: $record_number $op $server\n";
     my $dbh = C4::Context->dbh;
 
     # true ModZebra commented until indexdata fixes zebraDB crashes (it seems they occur on multiple updates

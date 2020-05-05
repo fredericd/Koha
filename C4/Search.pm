@@ -2361,7 +2361,7 @@ sub new_record_from_zebra {
     my $raw_data = shift;
     # Set the default indexing modes
     my $search_engine = C4::Context->preference("SearchEngine");
-    if ($search_engine eq 'Elasticsearch') {
+    if ($search_engine =~ /Elasticsearch|ES/ ) {
         return ref $raw_data eq 'MARC::Record' ? $raw_data : MARC::Record->new_from_xml( $raw_data, 'UTF-8' );
     }
     my $index_mode = ( $server eq 'biblioserver' )

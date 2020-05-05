@@ -1,6 +1,7 @@
 package Koha::SearchEngine::Elasticsearch::Search;
 
 # Copyright 2014 Catalyst IT
+# Copyright 2020 Tamil s.a.r.l.
 #
 # This file is part of Koha.
 #
@@ -38,9 +39,10 @@ Koha::SearchEngine::Elasticsearch::Search - search functions for Elasticsearch
 
 =cut
 
+use Moo;
+extends 'Koha::SearchEngine::Elasticsearch';
 use Modern::Perl;
 
-use base qw(Koha::SearchEngine::Elasticsearch);
 use C4::Context;
 use C4::AuthoritiesMarc;
 use Koha::ItemTypes;
@@ -49,12 +51,13 @@ use Koha::SearchEngine::QueryBuilder;
 use Koha::SearchEngine::Search;
 use Koha::Exceptions::Elasticsearch;
 use MARC::Record;
+use Catmandu::Store::ElasticSearch;
 use MARC::File::XML;
 use Data::Dumper; #TODO remove
 use Carp qw(cluck);
 use MIME::Base64;
 
-Koha::SearchEngine::Elasticsearch::Search->mk_accessors(qw( store ));
+
 
 =head2 search
 
@@ -80,7 +83,7 @@ Returns
 =cut
 
 sub search {
-    my ($self, $query, $page, $count, %options) = @_;
+    my ($self, $index, $query, $page, $count, %options) = @_;
 
     # 20 is the default number of results per page
     $query->{size} = $count // 20;
@@ -91,41 +94,21 @@ sub search {
         $page = (!defined($page) || ($page <= 0)) ? 0 : $page - 1;
         $query->{from} = $page * $query->{size};
     }
-    my $elasticsearch = $self->get_elasticsearch();
+    return $index->search($query);
     my $results = eval {
-        $elasticsearch->search(
-            index => $self->index_name,
+        $index->es->client->search(
+            index => $index->index,
             body => $query
         );
     };
     if ($@) {
-        die $self->process_error($@);
+        warn $@;
+        die $@;
     }
     return $results;
 }
 
-=head2 count
 
-    my $count = $searcher->count($query);
-
-This mimics a search request, but just gets the result count instead. That's
-faster than pulling all the data in, usually.
-
-=cut
-
-sub count {
-    my ( $self, $query ) = @_;
-    my $elasticsearch = $self->get_elasticsearch();
-
-    # TODO: Probably possible to exclude results
-    # and just return number of hits
-    my $result = $elasticsearch->search(
-        index => $self->index_name,
-        body => $query
-    );
-
-    return $result->{hits}->{total};
-}
 
 =head2 search_compat
 
@@ -148,8 +131,10 @@ sub search_compat {
         $item_types, $query_type,       $scan
     ) = @_;
 
+    my $index = $self->SUPER::indexes->{biblios};
+
     if ( $scan ) {
-        return $self->_aggregation_scan( $query, $results_per_page, $offset );
+        return $self->_aggregation_scan($index, $query, $results_per_page, $offset);
     }
 
     my %options;
@@ -157,16 +142,16 @@ sub search_compat {
         $offset = 0;
     }
     $options{offset} = $offset;
-    my $results = $self->search($query, undef, $results_per_page, %options);
+    my $results = $self->search($index, $query, undef, $results_per_page, %options);
 
     # Convert each result into a MARC::Record
     my @records;
     # opac-search expects results to be put in the
     # right place in the array, according to $offset
-    my $index = $offset;
+    my $i = $offset;
     my $hits = $results->{'hits'};
     foreach my $es_record (@{$hits->{'hits'}}) {
-        $records[$index++] = $self->decode_record_from_result($es_record->{'_source'});
+        $records[$i++] = $self->decode_record_from_result($es_record->{'_source'});
     }
 
     # consumers of this expect a name-spaced result, we provide the default
@@ -190,6 +175,8 @@ results in a form the same as L<C4::AuthoritiesMarc::SearchAuthorities>.
 sub search_auth_compat {
     my ($self, $query, $offset, $count, $skipmetadata, %options) = @_;
 
+    my $index = $self->indexes->{authorities};
+
     if ( !defined $offset or $offset <= 0 ) {
         $offset = 1;
     }
@@ -197,9 +184,8 @@ sub search_auth_compat {
     $options{offset} = $offset - 1;
     my $database = Koha::Database->new();
     my $schema   = $database->schema();
-    my $res      = $self->search($query, undef, $count, %options);
+    my $res      = $self->search($index, $query, undef, $count, %options);
 
-    my $bib_searcher = Koha::SearchEngine::Elasticsearch::Search->new({index => 'biblios'});
     my @records;
     my $hits = $res->{'hits'};
     foreach my $es_record (@{$hits->{'hits'}}) {
@@ -243,36 +229,32 @@ sub search_auth_compat {
             $result{summary} =
             C4::AuthoritiesMarc::BuildSummary( $marc, $result{authid},
                 $authtypecode );
-            $result{used} = $self->count_auth_use($bib_searcher, $authid);
+            $result{used} = $self->count_auth_use($authid);
         }
         push @records, \%result;
     }
-    return ( \@records, $hits->{'total'} );
+    return ( \@records, $hits->{total} );
 }
 
 =head2 count_auth_use
 
-    my $count = $auth_searcher->count_auth_use($bib_searcher, $authid);
+    my $count = $auth_searcher->count_auth_use($authid);
 
 This runs a search to determine the number of records that reference the
-specified authid. C<$bib_searcher> must be something compatible with
-elasticsearch, as the query is built in this function.
+specified authid. must be something compatible with elasticsearch, as the
+query is built in this function.
 
 =cut
 
 sub count_auth_use {
-    my ($self, $bib_searcher, $authid) = @_;
+    my ($self, $authid) = @_;
 
     my $query = {
-        query => {
-            bool => {
-#                query  => { match_all => {} },
-                filter => { term      => { 'koha-auth-number' => $authid } }
-            }
-        }
+        bool => { filter => { term => { 'koha-auth-number' => $authid } } }
     };
-    $bib_searcher->count($query);
+    $self->indexes->{biblios}->count($query);
 }
+
 
 =head2 simple_search_compat
 
@@ -333,6 +315,8 @@ sub simple_search_compat {
 
     return ('No query entered', undef, undef) unless $query;
 
+    my $index = $self->SUPER::indexes->{biblios};
+
     my %options;
     $offset = 0 if not defined $offset or $offset < 0;
     $options{offset} = $offset;
@@ -340,10 +324,10 @@ sub simple_search_compat {
 
     unless (ref $query) {
         # We'll push it through the query builder to sanitise everything.
-        my $qb = Koha::SearchEngine::QueryBuilder->new({index => $self->index});
+        my $qb = Koha::SearchEngine::QueryBuilder->new({index => $self->index, es => $self });
         (undef,$query) = $qb->build_query_compat(undef, [$query]);
     }
-    my $results = $self->search($query, undef, $max_results, %options);
+    my $results = $self->search($index, $query, undef, $max_results, %options);
     my @records;
     my $hits = $results->{'hits'};
     foreach my $es_record (@{$hits->{'hits'}}) {
@@ -404,16 +388,16 @@ the default value for this setting in case it is not set)
 sub max_result_window {
     my ($self) = @_;
 
-    my $elasticsearch = $self->get_elasticsearch();
+    my $index = $self->SUPER::indexes->{biblios};
+    my $index_name = $index->fullname;
 
-    my $response = $elasticsearch->indices->get_settings(
-        index => $self->index_name,
-        flat_settings => 'true',
-        include_defaults => 'true'
+    my $settings = $index->es->client->indices->get_settings(
+        index  => $index_name,
+        params => { include_defaults => 'true', flat_settings => 'true' },
     );
 
-    my $max_result_window = $response->{$self->index_name}->{settings}->{'index.max_result_window'};
-    $max_result_window //= $response->{$self->index_name}->{defaults}->{'index.max_result_window'};
+    my $max_result_window = $settings->{$index_name}->{settings}->{'index.max_result_window'};
+    $max_result_window //= $settings->{$index_name}->{defaults}->{'index.max_result_window'};
 
     return $max_result_window;
 }
@@ -448,12 +432,12 @@ sub _convert_facets {
         homebranch     => 'HomeLibrary',
         ln             => 'Language',
     );
-    my @facetable_fields =
-      Koha::SearchEngine::Elasticsearch->get_facetable_fields;
-    for my $f (@facetable_fields) {
-        next unless defined $f->facet_order;
-        $type_to_label{ $f->name } =
-          { order => $f->facet_order, label => $label{ $f->name } };
+    my @facetable_fields = qw/
+        author itype location su-geo title-series subject
+        ccode holdingbranch homebranch ln /;
+    for (my $i=0; $i < @facetable_fields; $i++) {
+        my $name = $facetable_fields[$i];
+        $type_to_label{$name} = { order => $i+1, label => $label{$name} };
     }
 
     # We also have some special cases, e.g. itypes that need to show the
@@ -511,14 +495,14 @@ sub _convert_facets {
 
 =head2 _aggregation_scan
 
-    my $result = $self->_aggregration_scan($query, 10, 0);
+    my $result = $self->_aggregration_scan($index, $query, 10, 0);
 
 Perform an aggregation request for scan purposes.
 
 =cut
 
 sub _aggregation_scan {
-    my ($self, $query, $results_per_page, $offset) = @_;
+    my ($self, $index, $query, $results_per_page, $offset) = @_;
 
     if (!scalar(keys %{$query->{aggregations}})) {
         my %result = {
@@ -531,17 +515,17 @@ sub _aggregation_scan {
     }
     my ($field) = keys %{$query->{aggregations}};
     $query->{aggregations}{$field}{terms}{size} = 1000;
-    my $results = $self->search($query, 1, 0);
+    my $results = $self->search($index, $query, 1, 0);
 
     # Convert each result into a MARC::Record
-    my (@records, $index);
+    my (@records, $idx);
     # opac-search expects results to be put in the
     # right place in the array, according to $offset
-    $index = $offset - 1;
+    $idx = $offset - 1;
 
     my $count = scalar(@{$results->{aggregations}{$field}{buckets}});
-    for (my $index = $offset; $index - $offset < $results_per_page && $index < $count; $index++) {
-        my $bucket = $results->{aggregations}{$field}{buckets}->[$index];
+    for (my $idx = $offset; $idx - $offset < $results_per_page && $idx < $count; $idx++) {
+        my $bucket = $results->{aggregations}{$field}{buckets}->[$idx];
         # Scan values are expressed as:
         # - MARC21: 100a (count) and 245a (term)
         # - UNIMARC: 200f (count) and 200a (term)
@@ -562,7 +546,7 @@ sub _aggregation_scan {
                 MARC::Field->new((245, ' ',  ' ', 'a' => $bucket->{key}))
             );
         }
-        $records[$index] = $marc->as_usmarc();
+        $records[$idx] = $marc->as_usmarc();
     };
     # consumers of this expect a namespaced result, we provide the default
     # configuration.

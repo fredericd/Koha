@@ -61,10 +61,10 @@ if ( $auth_status ne "ok" ) {
     my $resultsperpage = 50;
     my $startfrom = 0;
 
-    my $builder = Koha::SearchEngine::QueryBuilder->new(
-        { index => $Koha::SearchEngine::AUTHORITIES_INDEX } );
     my $searcher = Koha::SearchEngine::Search->new(
         { index => $Koha::SearchEngine::AUTHORITIES_INDEX } );
+    my $builder = Koha::SearchEngine::QueryBuilder->new(
+        { index => $Koha::SearchEngine::AUTHORITIES_INDEX, es => $searcher } );
     my $search_query = $builder->build_authorities_query_compat(
         \@marclist, \@and_or, \@excluding, \@operator,
         \@value, $authtypecode, $orderby
