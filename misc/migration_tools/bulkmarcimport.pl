@@ -167,6 +167,9 @@ if ($fk_off) {
 	$dbh->do("SET FOREIGN_KEY_CHECKS = 0");
 }
 
+# Force a queue size at 1000 for ES
+my $index = C4::Context->searchengine()->indexes->{$authorities ? 'authorities' : 'biblios'};
+$index->queue_size(1000);
 
 if ($delete) {
 	if ($biblios){
@@ -183,6 +186,7 @@ if ($delete) {
     	$dbh->do("truncate auth_header");
 	}
     $dbh->do("truncate zebraqueue");
+    $index->reset();
 }
 
 
@@ -547,6 +551,7 @@ RECORD: while (  ) {
     last if $i == $number;
 }
 $schema->txn_commit;
+$index->submit();
 
 if ($fk_off) {
 	$dbh->do("SET FOREIGN_KEY_CHECKS = 1");

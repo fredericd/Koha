@@ -18,6 +18,7 @@ package C4::Context;
 # along with Koha; if not, see <http://www.gnu.org/licenses>.
 
 use Modern::Perl;
+use Class::Load ':all';
 
 use vars qw($AUTOLOAD $context @context_stack);
 BEGIN {
@@ -171,6 +172,8 @@ environment variable to the pathname of a configuration file to use.
 #    handles for this context.
 # Zconn
 #     A connection object for the Zebra server
+# searchengine
+#     A object for searchengine related operations
 
 $context = undef;        # Initially, no context is set
 @context_stack = ();        # Initially, no saved contexts
@@ -265,6 +268,7 @@ sub new {
     }
 
     $self->{"Zconn"} = undef;    # Zebra Connections
+    $self->{searchengine} = undef;
     $self->{"userenv"} = undef;        # User env
     $self->{"activeuser"} = undef;        # current active user
     $self->{"shelves"} = undef;
@@ -777,6 +781,22 @@ sub restore_dbh
     # FIXME - If it is determined that restore_context should
     # return something, then this function should, too.
 }
+
+=head2 searchengine
+
+Returns Koha current search engine, Zebra or Elasticsearch.
+
+=cut
+sub searchengine {
+    if (!defined $context->{searchengine}) {
+        my $engine = C4::Context->preference("SearchEngine") // 'Zebra';
+        $engine = "Koha::SearchEngine::$engine";
+        load_class($engine);
+        $context->{searchengine} = $engine->new();
+    }
+    return $context->{searchengine};
+}
+
 
 =head2 userenv
 

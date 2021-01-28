@@ -33,8 +33,6 @@ use Koha::Authority::MergeRequests;
 use Koha::Authority::Types;
 use Koha::Authority;
 use Koha::Libraries;
-use Koha::SearchEngine;
-use Koha::SearchEngine::Indexer;
 use Koha::SearchEngine::Search;
 
 use vars qw(@ISA @EXPORT);
@@ -629,8 +627,7 @@ sub AddAuthority {
     $record->insert_fields_ordered( MARC::Field->new( '001', $authid ) );
     # Update
     $dbh->do( "UPDATE auth_header SET authtypecode=?, marc=?, marcxml=? WHERE authid=?", undef, $authtypecode, $record->as_usmarc, $record->as_xml_record($format), $authid ) or die $DBI::errstr;
-    my $indexer = Koha::SearchEngine::Indexer->new({ index => $Koha::SearchEngine::AUTHORITIES_INDEX });
-    $indexer->index_records( $authid, "specialUpdate", "authorityserver", $record );
+    C4::Context->searchengine()->indexes->{authorities}->add($authid);
 
     return ( $authid );
 }
@@ -658,8 +655,7 @@ sub DelAuthority {
     merge({ mergefrom => $authid }) if !$skip_merge;
     $dbh->do( "DELETE FROM auth_header WHERE authid=?", undef, $authid );
     logaction( "AUTHORITIES", "DELETE", $authid, "authority" ) if C4::Context->preference("AuthoritiesLog");
-    my $indexer = Koha::SearchEngine::Indexer->new({ index => $Koha::SearchEngine::AUTHORITIES_INDEX });
-    $indexer->index_records( $authid, "recordDelete", "authorityserver", undef );
+    C4::Context->searchengine()->indexes->{authorities}->delete($authid);
 }
 
 =head2 ModAuthority

@@ -44,7 +44,6 @@ use Koha::DateUtils;
 use Koha::Items;
 use Koha::ItemTypes;
 use Koha::Patrons;
-use Koha::SearchEngine::Indexer;
 
 my $input = CGI->new;
 my $dbh = C4::Context->dbh;
@@ -354,9 +353,9 @@ if ($op eq "action") {
         my %del_bib_hash = map{ $_ => undef } @$del_biblionumbers;
         @$upd_biblionumbers = grep( ! exists( $del_bib_hash{$_} ), @$upd_biblionumbers );
 
-        my $indexer = Koha::SearchEngine::Indexer->new({ index => $Koha::SearchEngine::BIBLIOS_INDEX });
-        $indexer->index_records( $upd_biblionumbers, 'specialUpdate', "biblioserver", undef ) if @$upd_biblionumbers;
-        $indexer->index_records( $del_biblionumbers, 'recordDelete', "biblioserver", undef ) if @$del_biblionumbers;
+        my $index = C4::Context->searchengine()->indexes->{biblios};
+        $index->add($upd_biblionumbers);
+        $index->delete($del_biblionumbers);
     }
 }
 #

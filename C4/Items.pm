@@ -69,8 +69,6 @@ use Koha::Database;
 use Koha::Biblioitems;
 use Koha::Items;
 use Koha::ItemTypes;
-use Koha::SearchEngine;
-use Koha::SearchEngine::Indexer;
 use Koha::SearchEngine::Search;
 use Koha::Libraries;
 
@@ -1114,9 +1112,9 @@ sub MoveItemFromBiblio {
             AND biblionumber = ?
     |, undef, $tobiblioitem, $tobiblio, $itemnumber, $frombiblio );
     if ($return == 1) {
-        my $indexer = Koha::SearchEngine::Indexer->new({ index => $Koha::SearchEngine::BIBLIOS_INDEX });
-        $indexer->index_records( $tobiblio, "specialUpdate", "biblioserver" );
-        $indexer->index_records( $frombiblio, "specialUpdate", "biblioserver" );
+        my $index = C4::Context->searchengine()->indexes->{biblios};
+        $index->add($tobiblio);
+        $index->add($frombiblio);
 	    # Checking if the item we want to move is in an order 
         require C4::Acquisition;
         my $order = C4::Acquisition::GetOrderFromItemnumber($itemnumber);

@@ -58,7 +58,6 @@ use Koha::Config::SysPrefs;
 use Koha::Charges::Fees;
 use Koha::Util::SystemPreferences;
 use Koha::Checkouts::ReturnClaims;
-use Koha::SearchEngine::Indexer;
 use Carp;
 use List::MoreUtils qw( uniq any );
 use Scalar::Util qw( looks_like_number );
@@ -2037,8 +2036,7 @@ sub AddReturn {
             Rightbranch => $message
         };
         $doreturn = 0;
-        my $indexer = Koha::SearchEngine::Indexer->new({ index => $Koha::SearchEngine::BIBLIOS_INDEX });
-        $indexer->index_records( $item->biblionumber, "specialUpdate", "biblioserver" );
+        C4::Context->searchengine()->indexes->{biblios}->add($item->biblionumber);
         return ( $doreturn, $messages, $issue, $patron_unblessed);
     }
 
@@ -2073,9 +2071,7 @@ sub AddReturn {
                 }
             } else {
                 carp "The checkin for the following issue failed, Please go to the about page and check all messages on the 'System information' to see if there are configuration / data issues ($@)" . Dumper( $issue->unblessed );
-
-                my $indexer = Koha::SearchEngine::Indexer->new({ index => $Koha::SearchEngine::BIBLIOS_INDEX });
-                $indexer->index_records( $item->biblionumber, "specialUpdate", "biblioserver" );
+                C4::Context->searchengine()->indexes->{biblios}->add($item->biblionumber);
 
                 return ( 0, { WasReturned => 0, DataCorrupted => 1 }, $issue, $patron_unblessed );
             }
@@ -2266,8 +2262,7 @@ sub AddReturn {
         }
     }
 
-    my $indexer = Koha::SearchEngine::Indexer->new({ index => $Koha::SearchEngine::BIBLIOS_INDEX });
-    $indexer->index_records( $item->biblionumber, "specialUpdate", "biblioserver" );
+    C4::Context->searchengine()->indexes->{biblios}->add($item->biblionumber);
 
     if ( $doreturn and $issue ) {
         my $checkin = Koha::Old::Checkouts->find($issue->id);

@@ -36,7 +36,6 @@ use C4::Log qw( logaction );
 use Koha::Checkouts;
 use Koha::CirculationRules;
 use Koha::CoverImages;
-use Koha::SearchEngine::Indexer;
 use Koha::Item::Transfer::Limits;
 use Koha::Item::Transfers;
 use Koha::ItemTypes;
@@ -195,8 +194,7 @@ sub store {
           ? logaction( "CATALOGUING", "ADD", $self->itemnumber, "item" )
           : logaction( "CATALOGUING", "MODIFY", $self->itemnumber, "item " . Dumper( $self->unblessed ) );
     }
-    my $indexer = Koha::SearchEngine::Indexer->new({ index => $Koha::SearchEngine::BIBLIOS_INDEX });
-    $indexer->index_records( $self->biblionumber, "specialUpdate", "biblioserver" )
+    C4::Context->searchengine()->indexes->{biblios}->add($self->biblionumber)
         unless $params->{skip_record_index};
     $self->get_from_storage->_after_item_action_hooks({ action => $action });
 
@@ -216,8 +214,7 @@ sub delete {
 
     my $result = $self->SUPER::delete;
 
-    my $indexer = Koha::SearchEngine::Indexer->new({ index => $Koha::SearchEngine::BIBLIOS_INDEX });
-    $indexer->index_records( $self->biblionumber, "specialUpdate", "biblioserver" )
+    C4::Context->searchengine()->indexes->{biblios}->add($self->biblionumber)
         unless $params->{skip_record_index};
 
     $self->_after_item_action_hooks({ action => 'delete' });

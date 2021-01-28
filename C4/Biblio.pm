@@ -102,8 +102,6 @@ use Koha::Biblio::Metadatas;
 use Koha::Holds;
 use Koha::ItemTypes;
 use Koha::Plugins;
-use Koha::SearchEngine;
-use Koha::SearchEngine::Indexer;
 use Koha::Libraries;
 use Koha::Util::MARC;
 
@@ -456,10 +454,8 @@ sub DelBiblio {
         $hold->cancel;
     }
 
-    unless ( $params->{skip_record_index} ){
-        my $indexer = Koha::SearchEngine::Indexer->new({ index => $Koha::SearchEngine::BIBLIOS_INDEX });
-        $indexer->index_records( $biblionumber, "recordDelete", "biblioserver" );
-    }
+    C4::Context->searchengine()->indexes->{biblios}->delete($biblionumber)
+        unless $params->{skip_record_index};
 
     # delete biblioitems and items from Koha tables and save in deletedbiblioitems,deleteditems
     $sth = $dbh->prepare("SELECT biblioitemnumber FROM biblioitems WHERE biblionumber=?");
@@ -3073,8 +3069,7 @@ sub ModBiblioMarc {
     $m_rs->metadata( $record->as_xml_record($encoding) );
     $m_rs->store;
 
-    my $indexer = Koha::SearchEngine::Indexer->new({ index => $Koha::SearchEngine::BIBLIOS_INDEX });
-    $indexer->index_records( $biblionumber, "specialUpdate", "biblioserver" );
+    C4::Context->searchengine()->indexes->{biblios}->add($biblionumber);
 
     return $biblionumber;
 }

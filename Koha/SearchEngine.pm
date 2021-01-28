@@ -1,8 +1,5 @@
 package Koha::SearchEngine;
-# This handles generic search-engine related functions
 
-# Copyright 2015 Catalyst IT
-#
 # This file is part of Koha.
 #
 # Koha is free software; you can redistribute it and/or modify it
@@ -18,29 +15,21 @@ package Koha::SearchEngine;
 # You should have received a copy of the GNU General Public License
 # along with Koha; if not, see <http://www.gnu.org/licenses>.
 
+use Moo;
 use Modern::Perl;
-use Readonly;
+use C4::Context;
+use Class::Load ':all';
 
-=head1 NAME
+sub BUILD {
+    my $self = shift;
 
-Koha::SearchEngine - non-engine-specific data and functions
+    my $engine = C4::Context->preference("SearchEngine") // 'Zebra';
+    $engine = "Koha::SearchEngine::$engine";
+    load_class($engine);
+    my $class = $engine->new();
+    use YAML;
+    say Dump($class);
+    return $class;
+}
 
-=head1 VARIABLES / CONSTANTS
-
-=head2 BIBLIOS_INDEX
-
-Use this constant when creating a new L<Koha::SearchEngine::Search> instance
-to indicate that you want to be working with the biblio index.
-
-=head2 AUTHORITIES_INDEX
-
-Use this constant when creating a new L<Koha::SearchEngine::Search> instance to
-indicate that you want to be working with the authorities index.
-
-=cut
-
-# Search engine implementations should compare against these to determine
-# what bit of storage is being requested. They will be sensible strings so
-# may be used for, e.g., directory names.
-Readonly our $BIBLIOS_INDEX     => 'biblios';
-Readonly our $AUTHORITIES_INDEX => 'authorities';
+1;

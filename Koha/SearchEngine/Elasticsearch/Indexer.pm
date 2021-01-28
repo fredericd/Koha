@@ -5,6 +5,7 @@ use Modern::Perl;
 use Koha::Exceptions;
 use C4::Context;
 use C4::Biblio;
+use C4::AuthoritiesMarc;
 use Proc::Fork;
 use IPC::Shareable;
 use JSON;
@@ -187,6 +188,5 @@ sub indexing {
         $self->indexing_multicore($p);
     }
 }
-
 
 1;

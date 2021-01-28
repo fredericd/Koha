@@ -2,7 +2,7 @@ package Koha::SearchEngine::Elasticsearch::QueryBuilder;
 
 # This file is part of Koha.
 #
-# Copyright 2020 Tamil s.a.r.l.
+# Copyright 2021 Tamil s.a.r.l.
 #
 # Koha is free software; you can redistribute it and/or modify it
 # under the terms of the GNU General Public License as published by
@@ -1153,70 +1153,10 @@ sub _search_fields {
         # can hopefully be removed in the future
         subfield => undef,
     };
-
-    my $index = $self->es->indexes->{$self->index};
+    my $index = $self->es->indexes->{$self->index || 'biblios'} ;
     my $sff = $index->search_fields_for;
     my $for = $params->{is_opac} ? 'opac' : 'staff';
     return $sff->{$for};
-
-    # FIXME: Delete
-    my $cache = Koha::Caches->get_instance();
-    my $cache_key = 'elasticsearch_search_fields' . ($params->{is_opac} ? '_opac' : '_staff_client');
-    my $search_fields = $cache->get_from_cache($cache_key, { unsafe => 1 });
-    if (!$search_fields) {
-        # The reason we don't use Koha::SearchFields->search here is we don't
-        # want or need resultset wrapped as Koha::SearchField object.
-        # It does not make any sense in this context and would cause
-        # unnecessary overhead sice we are only querying for data
-        # Also would not work, or produce strange results, with the "columns"
-        # option.
-        my $schema = Koha::Database->schema;
-        my $result = $schema->resultset('SearchField')->search(
-            {
-                $params->{is_opac} ? (
-                    'opac' => 1,
-                ) : (
-                    'staff_client' => 1
-                ),
-                'type' => { '!=' => 'boolean' },
-                'search_marc_map.index_name' => $self->index,
-                'search_marc_map.marc_type' => C4::Context->preference('marcflavour'),
-                'search_marc_to_fields.search' => 1,
-            },
-            {
-                columns => [qw/name weight/],
-                collapse => 1,
-                join => {search_marc_to_fields => 'search_marc_map'},
-            }
-        );
-        my @search_fields;
-        while (my $search_field = $result->next) {
-            push @search_fields, [
-                $search_field->name,
-                $search_field->weight ? $search_field->weight : ()
-            ];
-        }
-        $search_fields = \@search_fields;
-        $cache->set_in_cache($cache_key, $search_fields);
-    }
-    if ($params->{subfield}) {
-        my $subfield = $params->{subfield};
-        $search_fields = [
-            map {
-                # Copy values to avoid mutating cached
-                # data (since unsafe is used)
-                my ($field, $weight) = @{$_};
-                ["${field}.${subfield}", $weight];
-            } @{$search_fields}
-        ];
-    }
-    if ($params->{weighted_fields}) {
-        return [map { join('^', @{$_}) } @{$search_fields}];
-    }
-    else {
-        # Exclude weight from field
-        return [map { $_->[0] } @{$search_fields}];
-    }
 }
 
 1;

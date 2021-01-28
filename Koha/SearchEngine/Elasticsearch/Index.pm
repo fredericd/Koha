@@ -206,25 +206,6 @@ sub count {
 }
 
 
-=head2 delete($ids)
-
-Delete biblio/authority records. C<ids> is an id or an array ref of id. No
-queue.
-
-=cut
-sub delete {
-    my ($self, $ids) = @_;
-
-    my @ids = ref($ids) eq 'ARRAY' ? @$ids : ($ids);
-    my $bulk = $self->es->client->bulk_helper(
-        index => $self->fullname,
-        type  => 'data');
-    $bulk->delete_ids(@ids);
-    $bulk->flush;
-}
-
-
-
 =head2 reset
 
 Reset the ES index: delete the ES index, recreate it, and create the mapping.
@@ -376,24 +357,45 @@ sub get_record {
 
 =head2 add($id)
 
-Add to the index a record identified by its C<$id>. The record is queued and
-not added immediatly to ES. If the queue reach C<queue_size>, the queue is
-sent to ES.
+Add to the index a record identified by its C<$id>. The parameter can be a
+arrayref of ids. The record is queued and not added immediatly to ES. If
+the queue reach C<queue_size>, the queue is sent to ES.
 
 =cut
 sub add {
-    my ($self, $id) = @_;
+    my ($self, $ids) = @_;
 
-    my $record = $self->get_record($id);
-    return unless $record;
+    $ids = ref($ids) eq 'ARRAY' ? $ids : [$ids];
 
     my $queue = $self->queue;
-    push @$queue, { index => { _id => $id }};
-    push @$queue, $self->to_doc($record);
-
-    my $queue_count = $self->queue_count + 1;
+    my $queue_count = $self->queue_count;
+    for my $id (@$ids) {
+        my $record = $self->get_record($id);
+        next unless $record;
+        push @$queue, { index => { _id => $id } };
+        push @$queue, $self->to_doc($record);
+        $queue_count++;
+    }
     $self->queue_count($queue_count);
-    $self->submit() if $queue_count == $self->queue_size;
+    $self->submit() if $queue_count >= $self->queue_size;
+}
+
+
+=head2 delete($ids)
+
+Delete biblio/authority records. C<ids> is an id or an array ref of id. No
+queue.
+
+=cut
+sub delete {
+    my ($self, $ids) = @_;
+
+    my @ids = ref($ids) eq 'ARRAY' ? @$ids : ($ids);
+    my $bulk = $self->es->client->bulk_helper(
+        index => $self->fullname,
+        type  => 'data');
+    $bulk->delete_ids(@ids);
+    $bulk->flush;
 }
 
 
