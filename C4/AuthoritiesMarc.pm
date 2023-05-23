@@ -426,6 +426,9 @@ sub GuessAuthTypeCode {
         '280'=>{authtypecode=>'GENRE/FORM'},
     }
 };
+    if (my $field = $record->field('152')) {
+        return $field->subfield('b');
+    }
     foreach my $field (keys %{$heading_fields->{uc(C4::Context->preference('marcflavour'))} }) {
        return $heading_fields->{uc(C4::Context->preference('marcflavour'))}->{$field}->{'authtypecode'} if (defined $record->field($field));
     }
