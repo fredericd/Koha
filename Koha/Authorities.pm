@@ -51,7 +51,7 @@ sub get_usage_count {
     my $authid = $params->{authid} || return;
 
     my $searcher = Koha::SearchEngine::Search->new({ index => $Koha::SearchEngine::BIBLIOS_INDEX });
-    my ( $err, $result, $count ) = $searcher->simple_search_compat( 'an:' . $authid, 0, 0 );
+    my ( $err, $result, $count ) = $searcher->simple_search_compat( "an:\"$authid\"", 0, 0 );
     if( $err ) {
         warn "Error: $err from search for " . $authid;
         return;
